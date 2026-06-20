@@ -2,7 +2,7 @@ name: Auto Video Poster
 
 on:
   schedule:
-    - cron: '0 */4 * * *'
+    - cron: '0 */4 * * *'   # প্রতি ৫ ঘণ্টায় (দিনে ৪-৫ বার)
   workflow_dispatch:
 
 jobs:
@@ -22,4 +22,6 @@ jobs:
         env:
           FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
           FACEBOOK_ACCESS_TOKEN: ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
         run: python bot.py
