@@ -2,26 +2,42 @@ name: Auto Video Poster
 
 on:
   schedule:
-    - cron: '0 */4 * * *'   # প্রতি ৫ ঘণ্টায় (দিনে ৪-৫ বার)
-  workflow_dispatch:
+    - cron: '0 */5 * * *'  # Every 5 hours
+  workflow_dispatch:  # Manual trigger button
 
 jobs:
   post:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      - name: Install dependencies
+      
+      - name: Install System Dependencies
         run: |
-          pip install -r requirements.txt
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
-      - name: Run Poster
+          sudo apt-get install -y \
+            ffmpeg \
+            imagemagick \
+            fonts-noto-core \
+            fonts-noto-cjk \
+            fonts-noto-color-emoji
+      
+      - name: Install Python Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run Video Poster Bot
         env:
           FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
           FACEBOOK_ACCESS_TOKEN: ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
-        run: python bot.py
+        run: python main.py
