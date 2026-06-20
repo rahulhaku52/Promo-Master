@@ -2,8 +2,8 @@ name: Auto Video Poster
 
 on:
   schedule:
-    - cron: '0 */5 * * *'  # প্রতি ৫ ঘণ্টায় রান করবে
-  workflow_dispatch:        # ম্যানুয়ালি চালানোর বাটন
+    - cron: '0 */5 * * *'
+  workflow_dispatch:
 
 jobs:
   post:
@@ -28,12 +28,12 @@ jobs:
             fonts-noto-cjk \
             fonts-noto-color-emoji
 
-      - name: Install Python Dependencies
+      - name: Install Python Dependencies (with retry)
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
-          # 🔥 সরাসরি ইনস্টল (requirements.txt-এ না থাকলেও চলবে)
-          pip install moviepy Pillow gTTS requests
+          pip install numpy==1.24.3  # moviepy-র আগে numpy ঠিক করে ইনস্টল
+          pip install moviepy==1.0.3 Pillow gTTS requests
+          pip freeze  # ইনস্টল হওয়া প্যাকেজ দেখাবে (ডিবাগের জন্য)
 
       - name: Run Video Poster Bot
         env:
