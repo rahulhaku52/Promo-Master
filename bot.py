@@ -4,7 +4,7 @@ import requests
 import random
 import tempfile
 from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 from gtts import gTTS
 from moviepy.editor import (
     ImageClip, AudioFileClip, VideoFileClip,
@@ -16,9 +16,9 @@ from moviepy.editor import (
 # ==========================================
 PAGE_ID = os.environ.get('FACEBOOK_PAGE_ID')
 ACCESS_TOKEN = os.environ.get('FACEBOOK_ACCESS_TOKEN')
-PIXABAY_API_KEY = os.environ.get('PIXABAY_API_KEY')        # PRIMARY
-PEXELS_API_KEY = os.environ.get('PEXELS_API_KEY')          # BACKUP 1
-UNSPLASH_API_KEY = os.environ.get('UNSPLASH_API_KEY')      # BACKUP 2
+PIXABAY_API_KEY = os.environ.get('PIXABAY_API_KEY')
+PEXELS_API_KEY = os.environ.get('PEXELS_API_KEY')
+UNSPLASH_API_KEY = os.environ.get('UNSPLASH_API_KEY')
 
 # ==========================================
 # 2. CONTENT LIBRARY
@@ -148,19 +148,14 @@ COLOR_THEMES = [
 ]
 
 # ==========================================
-# 4. TRENDING HASHTAGS (Pixabay PRIMARY)
+# 4. TRENDING HASHTAGS
 # ==========================================
 def fetch_trending_tags():
     """Pixabay → Pexels → Fallback"""
-
-    # PRIMARY: Pixabay
     if PIXABAY_API_KEY:
         try:
             query = random.choice(PIXABAY_THEMES)
-            url = (
-                f"https://pixabay.com/api/?key={PIXABAY_API_KEY}"
-                f"&q={query}&per_page=5&category=technology"
-            )
+            url = f"https://pixabay.com/api/?key={PIXABAY_API_KEY}&q={query}&per_page=5&category=technology"
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
                 hits = resp.json().get('hits', [])
@@ -177,7 +172,6 @@ def fetch_trending_tags():
         except Exception as e:
             print(f"⚠️ Pixabay tags error: {e}")
 
-    # BACKUP: Pexels
     if PEXELS_API_KEY:
         try:
             url = "https://api.pexels.com/v1/popular?per_page=5"
@@ -196,19 +190,18 @@ def fetch_trending_tags():
         except Exception as e:
             print(f"⚠️ Pexels tags error: {e}")
 
-    # FALLBACK
     print("✅ Tags from local pool")
     return random.sample(TRENDING_TAGS, 2)
 
 
 # ==========================================
-# 5. FONT LOADER (বাংলা সহ)
+# 5. FONT LOADER
 # ==========================================
 def load_fonts():
     """Best available system fonts including Bengali"""
     font_paths = {
         'bold': [
-            "/usr/share/fonts/truetype/noto/NotoSansBengali-Bold.ttf",  # ✅ বাংলা
+            "/usr/share/fonts/truetype/noto/NotoSansBengali-Bold.ttf",
             "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -216,7 +209,7 @@ def load_fonts():
             "/usr/share/fonts/truetype/ubuntu/Ubuntu-Bold.ttf",
         ],
         'regular': [
-            "/usr/share/fonts/truetype/noto/NotoSansBengali-Regular.ttf",  # ✅ বাংলা
+            "/usr/share/fonts/truetype/noto/NotoSansBengali-Regular.ttf",
             "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -277,10 +270,7 @@ def fetch_pexels_image(query):
     if not PEXELS_API_KEY:
         return None
     try:
-        url = (
-            f"https://api.pexels.com/v1/search"
-            f"?query={query}&per_page=10&orientation=landscape"
-        )
+        url = f"https://api.pexels.com/v1/search?query={query}&per_page=10&orientation=landscape"
         headers = {"Authorization": PEXELS_API_KEY}
         resp = requests.get(url, headers=headers, timeout=15)
         if resp.status_code == 200:
@@ -300,33 +290,40 @@ def fetch_pexels_image(query):
 
 
 def fetch_unsplash_image(query):
-    """BACKUP 2: Unsplash"""
+    """BACKUP 2: Unsplash (List/Dict উভয় handle করে)"""
     if not UNSPLASH_API_KEY:
         return None
     try:
-        url = (
-            f"https://api.unsplash.com/photos/random"
-            f"?query={query}&orientation=landscape&count=1"
-        )
+        url = f"https://api.unsplash.com/photos/random?query={query}&orientation=landscape&count=1"
         headers = {"Authorization": f"Client-ID {UNSPLASH_API_KEY}"}
         resp = requests.get(url, headers=headers, timeout=15)
+        
         if resp.status_code == 200:
             data = resp.json()
-            if isinstance(data, list) and data:
-                img_url = data[0]['urls']['regular']
+            img_url = None
+            
+            if isinstance(data, list):
+                if data and len(data) > 0:
+                    img_url = data[0].get('urls', {}).get('regular')
+            elif isinstance(data, dict):
+                img_url = data.get('urls', {}).get('regular')
+            
+            if img_url:
                 img_resp = requests.get(img_url, timeout=20)
                 if img_resp.status_code == 200:
                     img = Image.open(io.BytesIO(img_resp.content)).convert('RGB')
                     img = img.resize((1200, 628), Image.LANCZOS)
                     print("✅ Unsplash image fetched")
                     return img
+                    
     except Exception as e:
         print(f"⚠️ Unsplash image error: {e}")
+    
     return None
 
 
 # ==========================================
-# 7. GRADIENT BACKGROUND (FALLBACK)
+# 7. GRADIENT BACKGROUND
 # ==========================================
 def create_gradient_background(theme_colors, width=1200, height=628):
     """Professional gradient with decorations"""
@@ -337,7 +334,6 @@ def create_gradient_background(theme_colors, width=1200, height=628):
     c2 = theme_colors['color2']
     accent = theme_colors['accent']
 
-    # Main gradient top to bottom
     for y in range(height):
         t = y / height
         r = int(c1[0] + (c2[0] - c1[0]) * t)
@@ -345,24 +341,18 @@ def create_gradient_background(theme_colors, width=1200, height=628):
         b = int(c1[2] + (c2[2] - c1[2]) * t)
         draw.line([(0, y), (width, y)], fill=(r, g, b))
 
-    # Overlay decorations
     overlay = Image.new('RGBA', (width, height), (0, 0, 0, 0))
     ov_draw = ImageDraw.Draw(overlay)
 
-    # Big circle top right
     ov_draw.ellipse([width - 350, -150, width + 100, 350], fill=(*accent, 25))
-    # Small circle bottom left
     ov_draw.ellipse([-100, height - 300, 250, height + 50], fill=(*accent, 20))
-    # Medium circle center
     ov_draw.ellipse(
-        [width // 2 - 200, height // 2 - 200,
-         width // 2 + 200, height // 2 + 200],
+        [width // 2 - 200, height // 2 - 200, width // 2 + 200, height // 2 + 200],
         fill=(*accent, 10)
     )
 
     img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
 
-    # Subtle grid lines
     draw = ImageDraw.Draw(img)
     for x in range(0, width, 80):
         draw.line([(x, 0), (x, height)], fill=(*accent, 8), width=1)
@@ -374,7 +364,7 @@ def create_gradient_background(theme_colors, width=1200, height=628):
 
 
 # ==========================================
-# 8. PROFESSIONAL OVERLAY ON PHOTO
+# 8. PROFESSIONAL OVERLAY
 # ==========================================
 def add_professional_overlay(img, theme_colors):
     """Dark overlay + accent borders on photo"""
@@ -382,13 +372,11 @@ def add_professional_overlay(img, theme_colors):
     overlay = Image.new('RGBA', (width, height), (0, 0, 0, 0))
     ov_draw = ImageDraw.Draw(overlay)
 
-    # Dark gradient bottom
     for y in range(height):
         t = y / height
         alpha = int(80 + 100 * t)
         ov_draw.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
 
-    # Dark left side for text readability
     for x in range(width // 2):
         t = 1 - (x / (width // 2))
         alpha = int(60 * t)
@@ -397,7 +385,6 @@ def add_professional_overlay(img, theme_colors):
 
     img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
 
-    # Accent borders
     draw = ImageDraw.Draw(img)
     accent = theme_colors['accent']
     draw.rectangle([(0, 0), (width, 5)], fill=accent)
@@ -441,7 +428,6 @@ def draw_card_layout(img, draw, text, theme_colors,
     accent = theme_colors['accent']
     highlight = theme_colors['highlight']
 
-    # Card overlay
     card_overlay = Image.new('RGBA', (width, height), (0, 0, 0, 0))
     card_draw = ImageDraw.Draw(card_overlay)
 
@@ -454,20 +440,15 @@ def draw_card_layout(img, draw, text, theme_colors,
     img.paste(merged)
     draw = ImageDraw.Draw(img)
 
-    # Tag label
     tag_text = "⚡ TECH TIPS"
     tag_x, tag_y = 80, 110
     try:
         tag_w = int(draw.textlength(tag_text, font=font_tiny))
     except Exception:
         tag_w = 120
-    draw.rectangle(
-        [tag_x - 10, tag_y - 5, tag_x + tag_w + 10, tag_y + 30],
-        fill=accent
-    )
+    draw.rectangle([tag_x - 10, tag_y - 5, tag_x + tag_w + 10, tag_y + 30], fill=accent)
     draw.text((tag_x, tag_y), tag_text, fill=(0, 0, 0), font=font_tiny)
 
-    # Main text
     lines = wrap_text(text, font_large, 680, draw)
     y_pos = 165
     for i, line in enumerate(lines[:4]):
@@ -476,17 +457,12 @@ def draw_card_layout(img, draw, text, theme_colors,
         draw.text((80, y_pos), line, fill=color, font=font_large)
         y_pos += 58
 
-    # Divider
     div_y = y_pos + 15
     draw.rectangle([(80, div_y), (280, div_y + 3)], fill=accent)
     draw.rectangle([(290, div_y + 1), (480, div_y + 2)], fill=(*accent, 100))
 
-    # Subtitle
-    draw.text((80, div_y + 20),
-              "🔗 t.me/hacker_52 | ফলো করুন",
-              fill=accent, font=font_small)
+    draw.text((80, div_y + 20), "🔗 t.me/hacker_52 | ফলো করুন", fill=accent, font=font_small)
 
-    # Brand badge
     brand = "@hacker_52"
     try:
         brand_w = int(draw.textlength(brand, font=font_medium))
@@ -497,10 +473,8 @@ def draw_card_layout(img, draw, text, theme_colors,
     draw.rectangle([bx - 12, by - 8, cx2 - 10, by + 42], fill=accent)
     draw.text((bx, by), brand, fill=(0, 0, 0), font=font_medium)
 
-    # Date
     date_str = datetime.now().strftime("%d %b %Y")
-    draw.text((cx1 + 10, cy2 - 35),
-              date_str, fill=(*accent, 150), font=font_tiny)
+    draw.text((cx1 + 10, cy2 - 35), date_str, fill=(*accent, 150), font=font_tiny)
 
 
 def draw_split_layout(img, draw, text, theme_colors,
@@ -517,14 +491,9 @@ def draw_split_layout(img, draw, text, theme_colors,
     img.paste(merged)
     draw = ImageDraw.Draw(img)
 
-    # Vertical divider
     draw.rectangle([(width // 2 - 8, 0), (width // 2 - 4, height)], fill=accent)
-    draw.rectangle(
-        [(width // 2 - 22, 0), (width // 2 - 20, height)],
-        fill=(*accent, 80)
-    )
+    draw.rectangle([(width // 2 - 22, 0), (width // 2 - 20, height)], fill=(*accent, 80))
 
-    # Background big number
     draw.text((30, 60), "01", fill=(*accent, 25), font=font_huge)
 
     lines = wrap_text(text, font_large, width // 2 - 80, draw)
@@ -539,17 +508,13 @@ def draw_split_layout(img, draw, text, theme_colors,
     draw.text((60, height - 100), "💡 @hacker_52", fill=highlight, font=font_medium)
     draw.text((60, height - 65), "t.me/hacker_52", fill=accent, font=font_small)
 
-    # Right side decoration
     cx = width * 3 // 4
     cy = height // 2
-    draw.rectangle([cx - 100, cy - 100, cx + 100, cy + 100],
-                   outline=(*accent, 80), width=2)
-    draw.rectangle([cx - 85, cy - 85, cx + 85, cy + 85],
-                   outline=(*accent, 40), width=1)
+    draw.rectangle([cx - 100, cy - 100, cx + 100, cy + 100], outline=(*accent, 80), width=2)
+    draw.rectangle([cx - 85, cy - 85, cx + 85, cy + 85], outline=(*accent, 40), width=1)
 
     icons = ["⚡", "🚀", "💻", "🔥", "✨", "🎯"]
-    draw.text((cx - 45, cy - 55), random.choice(icons),
-              fill=(255, 255, 255), font=font_huge)
+    draw.text((cx - 45, cy - 55), random.choice(icons), fill=(255, 255, 255), font=font_huge)
 
     for i in range(4):
         for j in range(4):
@@ -570,21 +535,14 @@ def draw_minimal_layout(img, draw, text, theme_colors,
     ov_draw.rectangle([0, height // 2, width, height], fill=(0, 0, 0, 200))
     for y in range(height // 3):
         alpha = int(200 * (y / (height // 3)))
-        ov_draw.line(
-            [(0, height // 2 - y), (width, height // 2 - y)],
-            fill=(0, 0, 0, alpha)
-        )
+        ov_draw.line([(0, height // 2 - y), (width, height // 2 - y)], fill=(0, 0, 0, alpha))
     merged = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
     img.paste(merged)
     draw = ImageDraw.Draw(img)
 
-    # Top border
     draw.rectangle([(0, 0), (width, 6)], fill=accent)
-
-    # Brand top left
     draw.text((40, 25), "⚡ hacker_52", fill=(255, 255, 255), font=font_small)
 
-    # Bottom text
     lines = wrap_text(text, font_large, width - 100, draw)
     total_h = len(lines[:3]) * 62
     y_pos = height - total_h - 100
@@ -595,17 +553,13 @@ def draw_minimal_layout(img, draw, text, theme_colors,
         draw.text((50, y_pos), line, fill=color, font=font_large)
         y_pos += 62
 
-    # Bottom border + link
     draw.rectangle([(0, height - 6), (width, height)], fill=accent)
     link_text = "📱 t.me/hacker_52 | #webdev #tech #coding"
     try:
         link_w = int(draw.textlength(link_text, font=font_tiny))
     except Exception:
         link_w = 400
-    draw.text(
-        ((width - link_w) // 2, height - 35),
-        link_text, fill=(200, 200, 200), font=font_tiny
-    )
+    draw.text(((width - link_w) // 2, height - 35), link_text, fill=(200, 200, 200), font=font_tiny)
 
 
 def draw_bold_center_layout(img, draw, text, theme_colors,
@@ -615,32 +569,21 @@ def draw_bold_center_layout(img, draw, text, theme_colors,
     accent = theme_colors['accent']
     highlight = theme_colors['highlight']
 
-    # Full overlay
     overlay = Image.new('RGBA', (width, height), (0, 0, 0, 160))
     merged = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
     img.paste(merged)
     draw = ImageDraw.Draw(img)
 
-    # Corner decorations
     s = 40
-    # Top left
     draw.rectangle([(20, 20), (20 + s, 25)], fill=accent)
     draw.rectangle([(20, 20), (25, 20 + s)], fill=accent)
-    # Top right
     draw.rectangle([(width - 20 - s, 20), (width - 20, 25)], fill=accent)
     draw.rectangle([(width - 25, 20), (width - 20, 20 + s)], fill=accent)
-    # Bottom left
     draw.rectangle([(20, height - 25), (20 + s, height - 20)], fill=accent)
     draw.rectangle([(20, height - 20 - s), (25, height - 20)], fill=accent)
-    # Bottom right
-    draw.rectangle(
-        [(width - 20 - s, height - 25), (width - 20, height - 20)], fill=accent
-    )
-    draw.rectangle(
-        [(width - 25, height - 20 - s), (width - 20, height - 20)], fill=accent
-    )
+    draw.rectangle([(width - 20 - s, height - 25), (width - 20, height - 20)], fill=accent)
+    draw.rectangle([(width - 25, height - 20 - s), (width - 20, height - 20)], fill=accent)
 
-    # Top icon
     icons = ["🚀", "💡", "⚡", "🎯", "🔥", "✨"]
     icon = random.choice(icons)
     try:
@@ -649,10 +592,8 @@ def draw_bold_center_layout(img, draw, text, theme_colors,
         icon_w = 60
     draw.text(((width - icon_w) // 2, 60), icon, fill=(255, 255, 255), font=font_huge)
 
-    # Divider line
     draw.rectangle([(width // 2 - 100, 140), (width // 2 + 100, 144)], fill=accent)
 
-    # Center main text
     lines = wrap_text(text, font_large, width - 160, draw)
     total_h = len(lines[:4]) * 62
     y_pos = (height - total_h) // 2 - 20
@@ -668,31 +609,23 @@ def draw_bold_center_layout(img, draw, text, theme_colors,
         draw.text((x_pos, y_pos), line, fill=color, font=font_large)
         y_pos += 62
 
-    # Bottom divider + brand
-    draw.rectangle(
-        [(width // 2 - 100, y_pos + 20), (width // 2 + 100, y_pos + 24)],
-        fill=accent
-    )
+    draw.rectangle([(width // 2 - 100, y_pos + 20), (width // 2 + 100, y_pos + 24)], fill=accent)
     brand = "@hacker_52 | t.me/hacker_52"
     try:
         brand_w = int(draw.textlength(brand, font=font_small))
     except Exception:
         brand_w = 300
-    draw.text(
-        ((width - brand_w) // 2, height - 80),
-        brand, fill=highlight, font=font_small
-    )
+    draw.text(((width - brand_w) // 2, height - 80), brand, fill=highlight, font=font_small)
 
 
 # ==========================================
-# 11. ADD TEXT TO IMAGE (layout selector)
+# 11. ADD TEXT TO IMAGE
 # ==========================================
 def add_stylish_text(img, text, theme_colors, font_paths, layout='card'):
     """Load fonts and call chosen layout"""
     draw = ImageDraw.Draw(img)
     width, height = img.size
 
-    # Load fonts
     try:
         bold_path = font_paths.get('bold')
         reg_path = font_paths.get('regular') or bold_path
@@ -708,9 +641,7 @@ def add_stylish_text(img, text, theme_colors, font_paths, layout='card'):
         default = ImageFont.load_default()
         font_huge = font_large = font_medium = font_small = font_tiny = default
 
-    args = (img, draw, text, theme_colors,
-            font_huge, font_large, font_medium,
-            font_small, font_tiny, width, height)
+    args = (img, draw, text, theme_colors, font_huge, font_large, font_medium, font_small, font_tiny, width, height)
 
     if layout == 'card':
         draw_card_layout(*args)
@@ -728,16 +659,12 @@ def add_stylish_text(img, text, theme_colors, font_paths, layout='card'):
 # 12. MAIN IMAGE GENERATOR
 # ==========================================
 def generate_image(text):
-    """
-    Priority: Pixabay → Pexels → Unsplash → Gradient
-    Random layout + color theme every time
-    """
+    """Priority: Pixabay → Pexels → Unsplash → Gradient"""
     width, height = 1200, 628
     theme = random.choice(COLOR_THEMES)
     font_paths = load_fonts()
     query = random.choice(PIXABAY_THEMES)
 
-    # Fetch image
     img_source = fetch_pixabay_image(query)
 
     if img_source is None:
@@ -751,7 +678,6 @@ def generate_image(text):
     else:
         img_source = add_professional_overlay(img_source, theme)
 
-    # Random layout
     layout = random.choice(['card', 'split', 'minimal', 'bold_center'])
     print(f"✅ Layout: {layout} | Theme: {theme['name']}")
 
@@ -789,14 +715,12 @@ def generate_voice(text, lang=None):
 
 
 # ==========================================
-# 14. VIDEO CREATOR (বাংলা ফন্ট সহ) ✅ FIXED
+# 14. VIDEO CREATOR (FIXED)
 # ==========================================
-def create_video(image_path, voice_path, text,
-                 logo_text="⚡ @hacker_52", duration=15):
+def create_video(image_path, voice_path, text, logo_text="⚡ @hacker_52", duration=15):
     """Image + audio → MP4 with Bengali font support"""
     output_path = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False).name
 
-    # Bengali font path
     bengali_font = None
     for font_path in [
         "/usr/share/fonts/truetype/noto/NotoSansBengali-Bold.ttf",
@@ -815,42 +739,53 @@ def create_video(image_path, voice_path, text,
         img_clip = img_clip.set_duration(actual_duration)
         final_clip = img_clip.set_audio(audio_clip)
 
-        # Subtitle (first 8 seconds) with Bengali font
-        short_text = text[:80] + "..." if len(text) > 80 else text
-        subtitle = (
-            TextClip(
-                short_text,
-                fontsize=28,
-                color='white',
-                stroke_color='black',
-                stroke_width=1.5,
-                method='caption',
-                size=(900, None),
-                align='center',
-                font=bengali_font  # ✅ FIXED
-            )
-            .set_position(('center', 'bottom'))
-            .set_duration(min(8, actual_duration))
-            .set_opacity(0.9)
-        )
+                    # ফন্ট পাওয়া গেলে ব্যবহার করব, না হলে font প্যারামিটার বাদ দেব
+            if bengali_font:
+                short_text = text[:80] + "..." if len(text) > 80 else text
+                subtitle = TextClip(
+                    short_text,
+                    fontsize=28,
+                    color='white',
+                    stroke_color='black',
+                    stroke_width=1.5,
+                    method='caption',
+                    size=(900, None),
+                    align='center',
+                    font=bengali_font
+                ).set_position(('center', 'bottom')).set_duration(min(8, actual_duration)).set_opacity(0.9)
 
-        # Logo last 3 seconds with Bengali font
-        logo_pos = random.choice([('center', 'bottom'), ('right', 'bottom')])
-        logo = (
-            TextClip(
-                logo_text,
-                fontsize=42,
-                color='yellow',
-                stroke_color='black',
-                stroke_width=2,
-                method='label',
-                font=bengali_font  # ✅ FIXED
-            )
-            .set_position(logo_pos)
-            .set_duration(3)
-            .set_start(actual_duration - 3)
-            .set_opacity(0.95)
-        )
+                logo_pos = random.choice([('center', 'bottom'), ('right', 'bottom')])
+                logo = TextClip(
+                    logo_text,
+                    fontsize=42,
+                    color='yellow',
+                    stroke_color='black',
+                    stroke_width=2,
+                    method='label',
+                    font=bengali_font
+                ).set_position(logo_pos).set_duration(3).set_start(actual_duration - 3).set_opacity(0.95)
+            else:
+                short_text = text[:80] + "..." if len(text) > 80 else text
+                subtitle = TextClip(
+                    short_text,
+                    fontsize=28,
+                    color='white',
+                    stroke_color='black',
+                    stroke_width=1.5,
+                    method='caption',
+                    size=(900, None),
+                    align='center'
+                ).set_position(('center', 'bottom')).set_duration(min(8, actual_duration)).set_opacity(0.9)
+
+                logo_pos = random.choice([('center', 'bottom'), ('right', 'bottom')])
+                logo = TextClip(
+                    logo_text,
+                    fontsize=42,
+                    color='yellow',
+                    stroke_color='black',
+                    stroke_width=2,
+                    method='label'
+                ).set_position(logo_pos).set_duration(3).set_start(actual_duration - 3).set_opacity(0.95)
 
         final = CompositeVideoClip([final_clip, subtitle, logo])
         final.write_videofile(
@@ -867,9 +802,7 @@ def create_video(image_path, voice_path, text,
     except Exception as e:
         print(f"⚠️ Video error: {e} — using simple fallback")
         img_clip = ImageClip(image_path, duration=12)
-        img_clip.write_videofile(
-            output_path, fps=24, verbose=False, logger=None
-        )
+        img_clip.write_videofile(output_path, fps=24, verbose=False, logger=None)
 
     return output_path
 
@@ -912,34 +845,28 @@ def smallcaps_unicode(text):
 
 
 # ==========================================
-# 16. CAPTION GENERATOR (EMAIL যুক্ত) ✅ FIXED
+# 16. CAPTION GENERATOR (WITH EMAIL)
 # ==========================================
 def generate_caption(topic_text):
     """Stylish caption with unicode fonts + hashtags + EMAIL"""
+    fact = random.choice(FACTS)
+    tip = random.choice(TIPS)
+    review = random.choice(REVIEWS)
 
-    fact    = random.choice(FACTS)
-    tip     = random.choice(TIPS)
-    review  = random.choice(REVIEWS)
-
-    title_raw = random.choice(TITLE_TEMPLATES).format(
-        fact=fact, tip=tip, review=review
-    )
+    title_raw = random.choice(TITLE_TEMPLATES).format(fact=fact, tip=tip, review=review)
     body = random.choice([fact, tip, review])
 
-    # Style one English keyword
     english_words = ["Web Dev", "React JS", "Python", "API", "Tech", "Code", "Flutter"]
     style_fn = random.choice([bold_unicode, italic_unicode, smallcaps_unicode])
     styled_word = style_fn(random.choice(english_words))
 
-    # Hashtags
-    fixed   = random.sample(FIXED_HASHTAGS, 4)
+    fixed = random.sample(FIXED_HASHTAGS, 4)
     trending = fetch_trending_tags()
-    extra   = random.sample(TRENDING_TAGS, 3)
+    extra = random.sample(TRENDING_TAGS, 3)
     all_tags = " ".join(fixed + trending + extra)
 
     divider = "━" * 32
 
-    # ✅ EMAIL + TELEGRAM উভয়ই যুক্ত
     caption = (
         f"{divider}\n"
         f"🔥 {title_raw}\n"
@@ -947,8 +874,8 @@ def generate_caption(topic_text):
         f"{body}\n\n"
         f"━━━━━━━━━━━━━━━━\n"
         f"💼 {bold_unicode('Service')}: {styled_word}\n"
-        f"📧 {italic_unicode('Email')}: rahulhaku52@gmail.com\n"  # ✅ ADDED
-        f"📱 {italic_unicode('Telegram')}: t.me/hacker_52\n"      # ✅ ADDED
+        f"📧 {italic_unicode('Email')}: rahulhaku52@gmail.com\n"
+        f"📱 {italic_unicode('Telegram')}: t.me/hacker_52\n"
         f"🌐 {smallcaps_unicode('Follow Us')} for daily tips!\n"
         f"━━━━━━━━━━━━━━━━\n\n"
         f"{all_tags}"
@@ -1004,33 +931,27 @@ def main():
     print(f"🔑 Facebook: {'✅ Ready' if PAGE_ID and ACCESS_TOKEN else '❌ Missing'}")
     print("=" * 50)
 
-    img_path   = None
+    img_path = None
     voice_path = None
     video_path = None
 
     try:
-        # 1. Pick content
         content_pool = FACTS + TIPS + REVIEWS
         main_text = random.choice(content_pool)
         print(f"📝 Content: {main_text[:70]}...")
 
-        # 2. Generate image
         img_path = generate_image(main_text)
         print(f"🖼️  Image saved: {img_path}")
 
-        # 3. Generate voice
         voice_path, lang = generate_voice(main_text)
         print(f"🎙️  Voice saved (lang={lang}): {voice_path}")
 
-        # 4. Create video
         video_path = create_video(img_path, voice_path, main_text)
         print(f"🎬 Video saved: {video_path}")
 
-        # 5. Build caption
         caption = generate_caption(main_text)
         print(f"\n📋 Caption preview:\n{caption[:300]}\n...")
 
-        # 6. Upload to Facebook
         print("📤 Uploading to Facebook...")
         result = upload_to_facebook(video_path, main_text[:80], caption)
         print(f"📊 Final result: {result}")
@@ -1041,10 +962,7 @@ def main():
         traceback.print_exc()
 
     finally:
-        # Cleanup temp files
-        for label, path in [("image", img_path),
-                             ("voice", voice_path),
-                             ("video", video_path)]:
+        for label, path in [("image", img_path), ("voice", voice_path), ("video", video_path)]:
             if path and os.path.exists(path):
                 try:
                     os.unlink(path)
