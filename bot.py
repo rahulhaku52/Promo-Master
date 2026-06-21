@@ -17,8 +17,8 @@ import moviepy.audio.fx.all as afx
 # ==========================================
 # 1. CONFIGURATION
 # ==========================================
-PAGE_ID       = os.environ.get('FACEBOOK_PAGE_ID')
-ACCESS_TOKEN  = os.environ.get('FACEBOOK_ACCESS_TOKEN')
+PAGE_ID          = os.environ.get('FACEBOOK_PAGE_ID')
+ACCESS_TOKEN     = os.environ.get('FACEBOOK_ACCESS_TOKEN')
 PIXABAY_API_KEY  = os.environ.get('PIXABAY_API_KEY')
 PEXELS_API_KEY   = os.environ.get('PEXELS_API_KEY')
 UNSPLASH_API_KEY = os.environ.get('UNSPLASH_API_KEY')
@@ -30,71 +30,119 @@ MIN_DURATION    = 20
 MAX_DURATION    = 45
 TARGET_DURATION = 30
 
-# Bengali Font Paths
+# Bengali Font
 BENGALI_FONT_BOLD = "/usr/share/fonts/truetype/noto/NotoSansBengali-Bold.ttf"
 BENGALI_FONT_REG  = "/usr/share/fonts/truetype/noto/NotoSansBengali-Regular.ttf"
 
-# edge-tts voices
+# edge-tts voices (Bengali + Hindi + English)
 EDGE_VOICES = [
-    "bn-BD-NabanitaNeural",   # বাংলা নারী (ন্যাচারাল)
-    "bn-BD-PradeepNeural",    # বাংলা পুরুষ
-    "bn-IN-TanishaaNeural",   # বাংলা ভারত নারী
-    "en-US-JennyNeural",      # ইংরেজি ফলব্যাক
+    "bn-BD-NabanitaNeural",   # Bengali Female
+    "bn-BD-PradeepNeural",    # Bengali Male
+    "bn-IN-TanishaaNeural",   # Bengali India Female
+    "hi-IN-SwaraNeural",      # Hindi Female
+    "hi-IN-MadhurNeural",     # Hindi Male
+    "en-US-JennyNeural",      # English Fallback
 ]
 
 # ==========================================
-# 2. CONTENT LIBRARY
+# 2. CONTENT — ALL ENGLISH ✅
 # ==========================================
+
+# English Hooks
 HOOKS = [
-    "🔥 থামো! এই টিপসটা কাজে লাগবে!",
-    "💡 চোখ বড় করে দেখো!",
-    "🚀 প্রো টিপস শিখতে চাও?",
-    "📌 এই ১টি টিপস জানো?",
-    "⚡ ৩০ সেকেন্ডে শিখে নাও!",
-    "🎯 এটা না জানলে পিছিয়ে থাকবে!"
+    "🔥 Stop! This tip will change everything!",
+    "💡 Watch closely — this is gold!",
+    "🚀 Want to learn pro tips? Stay tuned!",
+    "📌 Did you know this secret?",
+    "⚡ Learn this in 30 seconds!",
+    "🎯 Don't miss out on this!",
+    "🔑 This one tip can save hours!",
+    "💥 Game changer alert!"
 ]
 
-FACTS = [
-    "ওয়েবসাইটের লোড টাইম ৩ সেকেন্ডের বেশি হলে ৫০% ভিজিটর চলে যায়",
-    "মোবাইল ফ্রেন্ডলি ওয়েবসাইট Google-এ বেশি র‍্যাঙ্ক পায়",
-    "React JS ২০২৬-এ সবচেয়ে ডিমান্ডেড স্কিল",
-    "Python দিয়ে ১০ মিনিটেই ওয়েব অ্যাপ বানানো যায়",
-    "API ইন্টিগ্রেশন ছাড়া আধুনিক অ্যাপ অসম্পূর্ণ",
-    "Flutter দিয়ে Android ও iOS দুটো অ্যাপ একসাথে বানানো যায়",
-    "SEO ছাড়া ওয়েবসাইট থাকা মানে অন্ধকারে থাকা",
-    "Good UI design ব্যবহারকারীর অভিজ্ঞতা ১০ গুণ বাড়িয়ে দেয়",
-    "Node.js দিয়ে real-time application তৈরি করা যায় সহজেই",
-    "TypeScript শিখলে বড় প্রজেক্টে bug অনেক কমে যায়"
+# English Facts
+FACTS_EN = [
+    "Website load time over 3 seconds loses 50% of visitors",
+    "Mobile-friendly websites rank higher on Google Search",
+    "React JS is the most demanded skill in 2026",
+    "You can build a web app in 10 minutes with Python",
+    "Modern apps are incomplete without API integration",
+    "Flutter lets you build Android & iOS apps together",
+    "SEO without content is like a car without fuel",
+    "Good UI design improves user experience by 10x",
+    "Node.js makes real-time apps easy to build",
+    "TypeScript reduces bugs in large projects significantly"
 ]
 
-TIPS = [
-    "CSS গ্রিড দিয়ে লেআউট ডিজাইন করুন — সহজ ও ফাস্ট",
-    "JavaScript-এ async/await ব্যবহার করুন — callback hell থেকে মুক্তি",
-    "Git দিয়ে কোড ভার্সন কন্ট্রোল করুন — কোড কখনো হারাবে না",
-    "VS Code-এ শর্টকাট শিখুন — কাজ ৩ গুণ দ্রুত হবে",
-    "Docker দিয়ে প্রজেক্ট ডেপ্লয় করুন — সহজ ও নির্ভরযোগ্য",
-    "TypeScript শিখলে বড় প্রজেক্টে সুবিধা পাবেন",
-    "প্রতিদিন কমপক্ষে ১ ঘণ্টা কোডিং প্র্যাকটিস করুন",
-    "Stack Overflow এবং GitHub ভালোভাবে ব্যবহার শিখুন"
+# English Tips
+TIPS_EN = [
+    "Use CSS Grid for layouts — easy & fast",
+    "Use async/await in JavaScript — escape callback hell",
+    "Use Git for version control — never lose your code",
+    "Learn VS Code shortcuts — work 3x faster",
+    "Deploy projects with Docker — reliable & simple",
+    "TypeScript is a must for large-scale projects",
+    "Practice coding at least 1 hour every day",
+    "Master Stack Overflow & GitHub for better solutions"
 ]
 
-REVIEWS = [
-    "আমার ওয়েবসাইট মাত্র ২ দিনে তৈরি করে দিয়েছে! অসাধারণ কাজ!",
-    "অ্যাপটা এত ফাস্ট আর ইউজার ফ্রেন্ডলি — ক্লায়েন্ট খুশি!",
-    "ডিজাইনটা ছিল আমার স্বপ্নের মতো — পারফেক্ট ডেলিভারি!",
-    "প্রফেশনাল কাজ, সময়মতো ডেলিভারি — ১০০% সন্তুষ্ট!",
-    "দামে কম, মানে সেরা — বারবার কাজ দেব!"
+# English Reviews
+REVIEWS_EN = [
+    "My website was built in just 2 days! Amazing work!",
+    "The app is super fast and user-friendly — client loved it!",
+    "The design was exactly like my dream — perfect delivery!",
+    "Professional work, on-time delivery — 100% satisfied!",
+    "Low cost, best quality — I will hire again!"
 ]
 
-TITLE_TEMPLATES = [
-    "আপনি কি জানেন? {fact}",
-    "{tip}",
-    "ক্লায়েন্ট বললো: {review}",
-    "🚀 {fact}",
-    "💡 {tip}",
-    "📱 {fact}"
+# English Image Texts (short, punchy)
+IMAGE_TEXTS = [
+    "Web Development Tips",
+    "Coding Hacks That Work",
+    "App Development Secrets",
+    "Tech Tips for 2025",
+    "Programming Tricks",
+    "Build Something Amazing",
+    "Level Up Your Skills",
+    "Code Smarter Not Harder",
+    "Full Stack Developer Tips",
+    "React JS Pro Tips"
 ]
 
+# English Voice Scripts (longer for audio duration)
+VOICE_SCRIPTS_EN = [
+    "Did you know? Website load time over 3 seconds loses half of your visitors. Optimize your site today for better results.",
+    "React JS is the most demanded skill in 2026. Start learning today and boost your career to the next level.",
+    "Mobile friendly websites rank higher on Google. Make sure your website looks great on all devices.",
+    "Python is so powerful that you can build a web app in just 10 minutes. Start your coding journey now.",
+    "Good UI design improves user experience by ten times. Invest in design and watch your business grow.",
+    "Git version control saves your code from disasters. Learn Git today and never lose your work again.",
+    "Flutter lets you build Android and iOS apps with one codebase. Save time and money with cross platform development.",
+    "SEO is the backbone of digital marketing. Without SEO your website is invisible to the world.",
+    "Node JS makes building real time applications super easy. Learn it and build the next big app.",
+    "TypeScript reduces bugs in large projects. Switch from JavaScript to TypeScript for cleaner code."
+]
+
+VOICE_SCRIPTS_BN = [
+    "জানেন কি? ওয়েবসাইটের লোড টাইম ৩ সেকেন্ডের বেশি হলে ৫০% ভিজিটর চলে যায়। আজই আপনার সাইট অপ্টিমাইজ করুন।",
+    "React JS ২০২৬ সালে সবচেয়ে বেশি চাহিদার স্কিল। আজই শেখা শুরু করুন এবং আপনার ক্যারিয়ার এগিয়ে নিন।",
+    "মোবাইল ফ্রেন্ডলি ওয়েবসাইট গুগলে বেশি র‍্যাঙ্ক পায়। আপনার ওয়েবসাইট সব ডিভাইসে সুন্দর দেখাচ্ছে তো?",
+    "Python দিয়ে মাত্র ১০ মিনিটে ওয়েব অ্যাপ বানানো যায়। আজই কোডিং শুরু করুন।",
+    "ভালো UI ডিজাইন ব্যবহারকারীর অভিজ্ঞতা ১০ গুণ বাড়িয়ে দেয়। ডিজাইনে বিনিয়োগ করুন।",
+    "Git দিয়ে কোড ভার্সন কন্ট্রোল করুন। আপনার কোড কখনো হারাবে না।",
+    "Flutter দিয়ে Android ও iOS দুটো অ্যাপ একসাথে বানানো যায়। সময় ও অর্থ দুটোই বাঁচান।",
+    "SEO ছাড়া ওয়েবসাইট থাকা মানে অন্ধকারে থাকা। আজই SEO শুরু করুন।"
+]
+
+VOICE_SCRIPTS_HI = [
+    "क्या आप जानते हैं? वेबसाइट की लोडिंग 3 सेकंड से ज्यादा होने पर 50% विजिटर चले जाते हैं। आज ही ऑप्टिमाइज़ करें।",
+    "React JS 2026 में सबसे ज्यादा डिमांडेड स्किल है। आज से ही सीखना शुरू करें और अपना करियर बनाएं।",
+    "Mobile friendly website Google पर ज्यादा rank पाती है। अपनी website को mobile friendly बनाएं।",
+    "Python से सिर्फ 10 मिनट में web app बना सकते हैं। आज से ही coding शुरू करें।",
+    "अच्छा UI design user experience 10 गुना बेहतर बनाता है। Design में invest करें।"
+]
+
+# Hashtags
 FIXED_HASHTAGS = [
     "#webdevelopment", "#appdevelopment", "#shorts",
     "#codingtips", "#programming", "#tech"
@@ -167,59 +215,52 @@ COLOR_THEMES = [
 # ==========================================
 def load_fonts():
     bold_paths = [
-        BENGALI_FONT_BOLD,
-        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
         "/usr/share/fonts/truetype/ubuntu/Ubuntu-Bold.ttf",
+        BENGALI_FONT_BOLD,
     ]
     reg_paths = [
-        BENGALI_FONT_REG,
-        "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
         "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
         "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf",
+        BENGALI_FONT_REG,
     ]
     bold = next((p for p in bold_paths if os.path.exists(p)), None)
     reg  = next((p for p in reg_paths  if os.path.exists(p)), None)
-
-    if bold:
-        print(f"✅ Bold font: {os.path.basename(bold)}")
-    if reg:
-        print(f"✅ Regular font: {os.path.basename(reg)}")
-
+    print(f"✅ Bold font: {os.path.basename(bold) if bold else 'default'}")
+    print(f"✅ Reg font:  {os.path.basename(reg)  if reg  else 'default'}")
     return {'bold': bold, 'regular': reg or bold}
 
 
 # ==========================================
-# 5. PIL TEXT OVERLAY (Bengali Fix ✅)
+# 5. PIL TEXT OVERLAY (English — No Font Issue)
 # ==========================================
-def create_text_overlay(text, img_width=1200, max_lines=3):
+def create_text_overlay(text, img_width=1200, accent_color=(0, 200, 255)):
     """
-    PIL দিয়ে বাংলা টেক্সট image হিসেবে তৈরি।
-    MoviePy ImageClip হিসেবে ব্যবহার হবে।
-    ১০০% বাংলা support।
+    PIL দিয়ে English subtitle image তৈরি।
+    MoviePy TextClip এর বদলে ImageClip হিসেবে ব্যবহার।
     """
-    font_path = BENGALI_FONT_BOLD
-    if not os.path.exists(font_path):
-        font_path = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+    font_paths = [
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
+    ]
+    font_path = next((p for p in font_paths if os.path.exists(p)), None)
 
     try:
-        font = ImageFont.truetype(font_path, 36)
-        font_small = ImageFont.truetype(font_path, 24)
+        font       = ImageFont.truetype(font_path, 38) if font_path else ImageFont.load_default()
+        font_small = ImageFont.truetype(font_path, 24) if font_path else ImageFont.load_default()
     except Exception:
-        font = ImageFont.load_default()
-        font_small = font
+        font = font_small = ImageFont.load_default()
 
-    # Text wrap
-    words = text.split()
-    lines = []
-    current = ""
+    # Word wrap
+    words, lines, current = text.split(), [], ""
     for word in words:
         test = f"{current} {word}".strip()
-        # Estimate width
-        est_w = len(test) * 22
-        if est_w <= img_width - 80:
+        if len(test) * 23 <= img_width - 80:
             current = test
         else:
             if current:
@@ -227,104 +268,101 @@ def create_text_overlay(text, img_width=1200, max_lines=3):
             current = word
     if current:
         lines.append(current)
-    lines = lines[:max_lines]
+    lines = lines[:3]
 
-    # Image size
-    line_h = 52
-    pad = 20
-    box_h = len(lines) * line_h + pad * 2 + 40  # +40 for contact line
-    box_w = img_width
+    line_h = 55
+    pad    = 18
+    box_h  = len(lines) * line_h + pad * 2 + 42
 
-    # Semi-transparent background
-    overlay = Image.new('RGBA', (box_w, box_h), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(overlay)
+    overlay = Image.new('RGBA', (img_width, box_h), (0, 0, 0, 0))
+    draw    = ImageDraw.Draw(overlay)
 
-    # Dark gradient background
+    # Background gradient
     for y in range(box_h):
-        t = y / box_h
-        alpha = int(180 + 40 * t)
-        draw.line([(0, y), (box_w, y)], fill=(0, 0, 0, alpha))
+        alpha = int(160 + 60 * (y / box_h))
+        draw.line([(0, y), (img_width, y)], fill=(0, 0, 0, alpha))
 
     # Top accent line
-    draw.rectangle([(0, 0), (box_w, 4)], fill=(0, 180, 255, 230))
+    draw.rectangle([(0, 0), (img_width, 4)], fill=(*accent_color, 230))
 
-    # Text lines
+    # Text
     y_pos = pad
     for i, line in enumerate(lines):
-        # Shadow
-        draw.text((52, y_pos + 2), line, font=font, fill=(0, 0, 0, 200))
-        # Main text
-        color = (0, 230, 255) if i == 0 else (255, 255, 255)
-        draw.text((50, y_pos), line, font=font, fill=(*color, 255))
+        draw.text((52, y_pos + 2), line, font=font, fill=(0, 0, 0, 210))
+        color = (*accent_color, 255) if i == 0 else (255, 255, 255, 255)
+        draw.text((50, y_pos), line, font=font, fill=color)
         y_pos += line_h
 
     # Contact bar
     contact = "📧 rahulhaku52@gmail.com  |  📱 t.me/hacker_52"
-    draw.rectangle([(0, box_h - 38), (box_w, box_h)], fill=(0, 0, 0, 220))
+    draw.rectangle([(0, box_h - 38), (img_width, box_h)], fill=(0, 0, 0, 230))
     draw.text((50, box_h - 30), contact, font=font_small, fill=(200, 200, 200, 255))
 
-    # Save to temp file
     tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
     overlay.save(tmp.name)
-    print(f"✅ Bengali text overlay created ({len(lines)} lines)")
+    print(f"✅ Text overlay created")
     return tmp.name
 
 
 # ==========================================
-# 6. VOICE GENERATOR (edge-tts Natural Voice)
+# 6. VOICE GENERATOR (Bengali/Hindi/English)
 # ==========================================
-async def _edge_tts_generate(text, voice, output_path):
-    """edge-tts async generate"""
-    communicate = edge_tts.Communicate(text, voice)
-    await communicate.save(output_path)
+async def _edge_generate(text, voice, path):
+    await edge_tts.Communicate(text, voice).save(path)
 
 
 def generate_voice(text):
     """
-    edge-tts দিয়ে ন্যাচারাল বাংলা ভয়েস।
-    ফলব্যাক: gTTS।
+    ✅ Voice language rotation:
+    Bengali → Hindi → English
     """
-    # Extended text for longer audio
-    extended = (
-        f"{text}। "
-        f"আরও জানতে আমাদের ফলো করুন। "
-        f"যোগাযোগ করুন: rahulhaku52 at gmail dot com "
-        f"অথবা টেলিগ্রামে t.me/hacker underscore 52। "
-        f"আমাদের সাথে থাকুন প্রতিদিনের টিপসের জন্য।"
-    )
-
     tmp = tempfile.NamedTemporaryFile(suffix='.mp3', delete=False)
 
-    # Try edge-tts voices
+    # Extended text for longer audio
+    extended = (
+        f"{text}. "
+        f"Follow us for daily tech tips. "
+        f"Contact: rahulhaku52 at gmail dot com "
+        f"or Telegram t dot me slash hacker underscore 52."
+    )
+
     for voice in EDGE_VOICES:
         try:
-            asyncio.run(_edge_tts_generate(extended, voice, tmp.name))
+            asyncio.run(_edge_generate(extended, voice, tmp.name))
             if os.path.exists(tmp.name) and os.path.getsize(tmp.name) > 1000:
-                print(f"✅ Voice: edge-tts ({voice})")
+                print(f"✅ Voice: {voice}")
                 return tmp.name, voice
         except Exception as e:
-            print(f"⚠️ edge-tts {voice} failed: {e}")
+            print(f"⚠️ edge-tts {voice}: {e}")
 
-    # Fallback: gTTS
-    try:
-        from gtts import gTTS
-        tts = gTTS(text=extended, lang='bn', slow=False)
-        tts.save(tmp.name)
-        print("✅ Voice: gTTS fallback (bn)")
-        return tmp.name, 'bn-gTTS'
-    except Exception as e:
-        print(f"⚠️ gTTS bn failed: {e}")
-
+    # Fallback gTTS
     try:
         from gtts import gTTS
         tts = gTTS(text=text, lang='en', slow=False)
         tts.save(tmp.name)
-        print("✅ Voice: gTTS fallback (en)")
+        print("✅ Voice: gTTS (en) fallback")
         return tmp.name, 'en-gTTS'
-    except Exception as e2:
-        print(f"❌ All voice failed: {e2}")
+    except Exception as e:
+        print(f"❌ All voice failed: {e}")
 
     return tmp.name, 'none'
+
+
+def pick_voice_text():
+    """
+    Random rotation: Bengali → Hindi → English voice scripts
+    """
+    choice = random.choices(
+        ['bn', 'hi', 'en'],
+        weights=[40, 30, 30]
+    )[0]
+
+    if choice == 'bn':
+        return random.choice(VOICE_SCRIPTS_BN), 'bn'
+    elif choice == 'hi':
+        return random.choice(VOICE_SCRIPTS_HI), 'hi'
+    else:
+        return random.choice(VOICE_SCRIPTS_EN), 'en'
 
 
 # ==========================================
@@ -340,15 +378,15 @@ def fetch_pixabay_image(query):
             f"&orientation=horizontal&per_page=10&safesearch=true"
             f"&min_width=1200&min_height=600"
         )
-        resp = requests.get(url, timeout=15)
-        if resp.status_code == 200:
-            hits = resp.json().get('hits', [])
+        r = requests.get(url, timeout=15)
+        if r.status_code == 200:
+            hits = r.json().get('hits', [])
             if hits:
-                chosen = random.choice(hits[:5])
+                chosen  = random.choice(hits[:5])
                 img_url = chosen.get('webformatURL') or chosen.get('largeImageURL')
-                r = requests.get(img_url, timeout=20)
-                if r.status_code == 200:
-                    img = Image.open(io.BytesIO(r.content)).convert('RGB')
+                ir = requests.get(img_url, timeout=20)
+                if ir.status_code == 200:
+                    img = Image.open(io.BytesIO(ir.content)).convert('RGB')
                     img = img.resize((1200, 628), Image.LANCZOS)
                     print(f"✅ Pixabay: {chosen.get('tags','')[:30]}")
                     return img
@@ -382,10 +420,17 @@ def fetch_unsplash_image(query):
     if not UNSPLASH_API_KEY:
         return None
     try:
-        url = f"https://api.unsplash.com/photos/random?query={query}&orientation=landscape&count=1"
-        r = requests.get(url, headers={"Authorization": f"Client-ID {UNSPLASH_API_KEY}"}, timeout=15)
+        url = (
+            f"https://api.unsplash.com/photos/random"
+            f"?query={query}&orientation=landscape&count=1"
+        )
+        r = requests.get(
+            url,
+            headers={"Authorization": f"Client-ID {UNSPLASH_API_KEY}"},
+            timeout=15
+        )
         if r.status_code == 200:
-            data = r.json()
+            data    = r.json()
             img_url = None
             if isinstance(data, list) and data:
                 img_url = data[0].get('urls', {}).get('regular')
@@ -407,50 +452,50 @@ def fetch_unsplash_image(query):
 # 8. GRADIENT BACKGROUND
 # ==========================================
 def create_gradient_background(theme, width=1200, height=628):
-    img = Image.new('RGB', (width, height))
+    img  = Image.new('RGB', (width, height))
     draw = ImageDraw.Draw(img)
-    c1, c2 = theme['color1'], theme['color2']
-    accent = theme['accent']
+    c1, c2, accent = theme['color1'], theme['color2'], theme['accent']
 
     for y in range(height):
         t = y / height
-        r = int(c1[0] + (c2[0] - c1[0]) * t)
-        g = int(c1[1] + (c2[1] - c1[1]) * t)
-        b = int(c1[2] + (c2[2] - c1[2]) * t)
-        draw.line([(0, y), (width, y)], fill=(r, g, b))
+        draw.line(
+            [(0, y), (width, y)],
+            fill=(
+                int(c1[0] + (c2[0] - c1[0]) * t),
+                int(c1[1] + (c2[1] - c1[1]) * t),
+                int(c1[2] + (c2[2] - c1[2]) * t),
+            )
+        )
 
-    overlay = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-    od = ImageDraw.Draw(overlay)
+    ov = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+    od = ImageDraw.Draw(ov)
     od.ellipse([width - 300, -100, width + 50, 300], fill=(*accent, 20))
     od.ellipse([-80, height - 250, 200, height + 30], fill=(*accent, 15))
 
-    img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
+    img = Image.alpha_composite(img.convert('RGBA'), ov).convert('RGB')
     print("✅ Gradient background")
     return img
 
 
 # ==========================================
-# 9. PROFESSIONAL OVERLAY + GRADIENT BAR
+# 9. PROFESSIONAL OVERLAY
 # ==========================================
 def add_professional_overlay(img, theme):
     width, height = img.size
-    overlay = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-    od = ImageDraw.Draw(overlay)
+    ov = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+    od = ImageDraw.Draw(ov)
 
-    # General dark overlay
     for y in range(height):
-        t = y / height
-        alpha = int(50 + 120 * t)
+        alpha = int(50 + 120 * (y / height))
         od.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
 
-    # ✅ Bottom gradient bar (text readability)
+    # Bottom gradient bar for text readability
     for y in range(height - 220, height):
-        t = (y - (height - 220)) / 220
+        t     = (y - (height - 220)) / 220
         alpha = int(200 * t)
         od.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
 
-    img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
-
+    img  = Image.alpha_composite(img.convert('RGBA'), ov).convert('RGB')
     draw = ImageDraw.Draw(img)
     accent = theme['accent']
     draw.rectangle([(0, 0), (width, 5)], fill=accent)
@@ -459,11 +504,10 @@ def add_professional_overlay(img, theme):
 
 
 # ==========================================
-# 10. TEXT WRAP HELPER
+# 10. TEXT WRAP
 # ==========================================
 def wrap_text(text, font, max_width, draw):
-    words = text.split()
-    lines, current = [], ""
+    words, lines, current = text.split(), [], ""
     for word in words:
         test = f"{current} {word}".strip()
         try:
@@ -482,86 +526,75 @@ def wrap_text(text, font, max_width, draw):
 
 
 # ==========================================
-# 11. LAYOUTS (Mobile Friendly)
+# 11. LAYOUTS (English Text — Clean)
 # ==========================================
 def draw_bottom_card(img, draw, text, hook, theme, fonts, width, height):
-    """Bottom card with hook headline"""
-    accent    = theme['accent']
-    highlight = theme['highlight']
-    f_large   = fonts['large']
-    f_medium  = fonts['medium']
-    f_small   = fonts['small']
-    f_tiny    = fonts['tiny']
+    accent, highlight = theme['accent'], theme['highlight']
+    f_large  = fonts['large']
+    f_small  = fonts['small']
+    f_tiny   = fonts['tiny']
 
-    card_y = int(height * 0.48)
+    card_y = int(height * 0.46)
 
-    card_ov = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-    cd = ImageDraw.Draw(card_ov)
-    cd.rectangle([0, card_y, width, height], fill=(0, 0, 0, 190))
-    cd.rectangle([0, card_y, width, card_y + 5], fill=(*accent, 230))
-
-    merged = Image.alpha_composite(img.convert('RGBA'), card_ov).convert('RGB')
+    ov = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+    od = ImageDraw.Draw(ov)
+    od.rectangle([0, card_y, width, height], fill=(0, 0, 0, 190))
+    od.rectangle([0, card_y, width, card_y + 5], fill=(*accent, 230))
+    merged = Image.alpha_composite(img.convert('RGBA'), ov).convert('RGB')
     img.paste(merged)
     draw = ImageDraw.Draw(img)
 
-    # Hook text
-    draw.text((42, card_y + 12), hook, fill=highlight, font=f_small)
-
-    # Divider
-    draw.rectangle([(40, card_y + 48), (200, card_y + 51)], fill=accent)
+    # Hook
+    draw.text((40, card_y + 14), hook, fill=highlight, font=f_small)
+    draw.rectangle([(40, card_y + 50), (200, card_y + 53)], fill=accent)
 
     # Main text
     lines = wrap_text(text, f_large, width - 80, draw)
-    y_pos = card_y + 62
+    y_pos = card_y + 65
     for i, line in enumerate(lines[:3]):
         draw.text((42, y_pos + 2), line, fill=(0, 0, 0), font=f_large)
-        color = (255, 255, 255) if i > 0 else highlight
-        draw.text((40, y_pos), line, fill=color, font=f_large)
+        draw.text((40, y_pos), line,
+                  fill=highlight if i == 0 else (255, 255, 255), font=f_large)
         y_pos += 52
 
     # Bottom bar
-    bar_y = height - 44
-    draw.rectangle([0, bar_y, width, height], fill=(0, 0, 0))
-    draw.rectangle([0, bar_y, width, bar_y + 3], fill=accent)
+    draw.rectangle([0, height - 44, width, height], fill=(0, 0, 0))
+    draw.rectangle([0, height - 44, width, height - 41], fill=accent)
     contact = "📧 rahulhaku52@gmail.com  |  📱 t.me/hacker_52"
     try:
         cw = int(draw.textlength(contact, font=f_tiny))
     except Exception:
         cw = 500
-    draw.text(((width - cw) // 2, bar_y + 10),
+    draw.text(((width - cw) // 2, height - 33),
               contact, fill=(210, 210, 210), font=f_tiny)
 
 
 def draw_center_bold(img, draw, text, hook, theme, fonts, width, height):
-    """Center bold impactful"""
-    accent    = theme['accent']
-    highlight = theme['highlight']
-    f_large   = fonts['large']
-    f_small   = fonts['small']
-    f_tiny    = fonts['tiny']
+    accent, highlight = theme['accent'], theme['highlight']
+    f_large = fonts['large']
+    f_small = fonts['small']
+    f_tiny  = fonts['tiny']
 
-    ov = Image.new('RGBA', (width, height), (0, 0, 0, 170))
+    ov     = Image.new('RGBA', (width, height), (0, 0, 0, 170))
     merged = Image.alpha_composite(img.convert('RGBA'), ov).convert('RGB')
     img.paste(merged)
     draw = ImageDraw.Draw(img)
 
     # Top bar
     draw.rectangle([(0, 0), (width, 6)], fill=accent)
-    draw.text((40, 18), "⚡ @hacker_52", fill=(255, 255, 255), font=f_small)
+    draw.text((40, 16), "⚡ @hacker_52", fill=(255, 255, 255), font=f_small)
 
-    # Hook
+    # Hook centered
     try:
         hw = int(draw.textlength(hook, font=f_small))
     except Exception:
         hw = 300
-    draw.text(((width - hw) // 2, 80), hook, fill=highlight, font=f_small)
+    draw.text(((width - hw) // 2, 75), hook, fill=highlight, font=f_small)
+    draw.rectangle([(width // 2 - 80, 115), (width // 2 + 80, 119)], fill=accent)
 
-    # Divider
-    draw.rectangle([(width // 2 - 80, 120), (width // 2 + 80, 124)], fill=accent)
-
-    # Main text centered
+    # Main text
     lines = wrap_text(text, f_large, width - 120, draw)
-    y_pos = 145
+    y_pos = 138
     for i, line in enumerate(lines[:3]):
         try:
             lw = int(draw.textlength(line, font=f_large))
@@ -586,19 +619,16 @@ def draw_center_bold(img, draw, text, hook, theme, fonts, width, height):
 
 
 def draw_top_title(img, draw, text, hook, theme, fonts, width, height):
-    """Top title card"""
-    accent    = theme['accent']
-    highlight = theme['highlight']
-    f_large   = fonts['large']
-    f_small   = fonts['small']
-    f_tiny    = fonts['tiny']
+    accent, highlight = theme['accent'], theme['highlight']
+    f_large = fonts['large']
+    f_small = fonts['small']
+    f_tiny  = fonts['tiny']
 
     card_h = int(height * 0.44)
     ov = Image.new('RGBA', (width, height), (0, 0, 0, 0))
     od = ImageDraw.Draw(ov)
     od.rectangle([0, 0, width, card_h], fill=(0, 0, 0, 195))
     od.rectangle([0, card_h - 5, width, card_h], fill=(*accent, 220))
-
     merged = Image.alpha_composite(img.convert('RGBA'), ov).convert('RGB')
     img.paste(merged)
     draw = ImageDraw.Draw(img)
@@ -613,7 +643,7 @@ def draw_top_title(img, draw, text, hook, theme, fonts, width, height):
     draw.text((width - dw - 30, 20), date_str, fill=(180, 180, 180), font=f_tiny)
 
     # Hook
-    draw.text((40, 60), hook, fill=highlight, font=f_small)
+    draw.text((40, 58), hook, fill=highlight, font=f_small)
 
     # Main text
     lines = wrap_text(text, f_large, width - 80, draw)
@@ -653,17 +683,17 @@ def add_stylish_text(img, text, hook, theme, font_paths, layout):
         rp = font_paths.get('regular') or bp
         if bp and os.path.exists(bp):
             fonts = {
-                'large':  ImageFont.truetype(bp, 44),
-                'medium': ImageFont.truetype(bp, 32),
-                'small':  ImageFont.truetype(rp, 27),
-                'tiny':   ImageFont.truetype(rp, 21),
+                'large':  ImageFont.truetype(bp, 46),
+                'medium': ImageFont.truetype(bp, 33),
+                'small':  ImageFont.truetype(rp, 28),
+                'tiny':   ImageFont.truetype(rp, 22),
             }
         else:
             raise OSError
     except Exception:
         d = ImageFont.load_default()
         fonts = {'large': d, 'medium': d, 'small': d, 'tiny': d}
-        print("⚠️ Using default font")
+        print("⚠️ Default font")
 
     args = (img, draw, text, hook, theme, fonts, width, height)
     if layout == 'bottom_card':
@@ -691,16 +721,16 @@ def add_logo_to_image(img):
         base = img.convert('RGBA')
         base.paste(logo, (iw - lw - 20, ih - lh - 55), logo)
         img = base.convert('RGB')
-        print("✅ Logo added to image")
+        print("✅ Logo added")
     except Exception as e:
-        print(f"⚠️ Logo error: {e}")
+        print(f"⚠️ Logo: {e}")
     return img
 
 
 # ==========================================
 # 14. MAIN IMAGE GENERATOR
 # ==========================================
-def generate_image(text, hook):
+def generate_image(image_text, hook):
     width, height = 1200, 628
     theme      = random.choice(COLOR_THEMES)
     font_paths = load_fonts()
@@ -719,7 +749,7 @@ def generate_image(text, hook):
     layout = random.choice(['bottom_card', 'center_bold', 'top_title'])
     print(f"✅ Layout: {layout} | Theme: {theme['name']}")
 
-    img = add_stylish_text(img, text, hook, theme, font_paths, layout)
+    img = add_stylish_text(img, image_text, hook, theme, font_paths, layout)
     img = add_logo_to_image(img)
 
     tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
@@ -728,46 +758,40 @@ def generate_image(text, hook):
 
 
 # ==========================================
-# 15. VIDEO CREATOR (All Fixed ✅)
+# 15. VIDEO CREATOR
 # ==========================================
-def create_video(image_path, voice_path, subtitle_text):
+def create_video(image_path, voice_path, subtitle_text, theme_accent=(0, 200, 255)):
     output_path = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False).name
-
-    text_overlay_path = None
+    overlay_path = None
 
     try:
-        audio_clip    = AudioFileClip(voice_path)
-        audio_dur     = audio_clip.duration
-        print(f"🎙️ Audio duration: {audio_dur:.1f}s")
+        audio_clip = AudioFileClip(voice_path)
+        audio_dur  = audio_clip.duration
+        print(f"🎙️ Audio: {audio_dur:.1f}s")
 
-        # ✅ Duration fix
-        video_dur = max(audio_dur, MIN_DURATION)
-        video_dur = max(video_dur, TARGET_DURATION)
+        video_dur = max(audio_dur, MIN_DURATION, TARGET_DURATION)
         video_dur = min(video_dur, MAX_DURATION)
-        print(f"🎬 Video duration: {video_dur:.1f}s")
+        print(f"🎬 Video: {video_dur:.1f}s")
 
-        # ✅ Loop audio if short
         if audio_dur < video_dur:
             audio_clip = audio_clip.fx(afx.audio_loop, duration=video_dur)
             print(f"🔁 Audio looped to {video_dur:.1f}s")
 
-        # Image clip
         img_clip   = ImageClip(image_path, duration=video_dur)
         final_clip = img_clip.set_audio(audio_clip)
 
-        # ✅ PIL Bengali text overlay (NOT TextClip)
-        text_overlay_path = create_text_overlay(subtitle_text, img_width=1200)
+        # ✅ PIL subtitle (no TextClip — no font issue)
+        overlay_path = create_text_overlay(subtitle_text, 1200, theme_accent)
         text_clip = (
-            ImageClip(text_overlay_path)
+            ImageClip(overlay_path)
             .set_position(('center', 'bottom'))
             .set_duration(min(12, video_dur))
             .set_opacity(0.93)
         )
 
-        # ✅ Logo clip
+        # Logo clip
         logo_clip = _get_logo_clip(video_dur)
 
-        # Composite
         clips = [final_clip, text_clip]
         if logo_clip:
             clips.append(logo_clip)
@@ -788,14 +812,13 @@ def create_video(image_path, voice_path, subtitle_text):
         print(f"⚠️ Video error: {e}")
         import traceback
         traceback.print_exc()
-        # Simple fallback
         img_clip = ImageClip(image_path, duration=MIN_DURATION)
         img_clip.write_videofile(output_path, fps=24, verbose=False, logger=None)
 
     finally:
-        if text_overlay_path and os.path.exists(text_overlay_path):
+        if overlay_path and os.path.exists(overlay_path):
             try:
-                os.unlink(text_overlay_path)
+                os.unlink(overlay_path)
             except Exception:
                 pass
 
@@ -803,7 +826,7 @@ def create_video(image_path, voice_path, subtitle_text):
 
 
 # ==========================================
-# 16. LOGO CLIP FOR VIDEO
+# 16. LOGO CLIP
 # ==========================================
 def _get_logo_clip(video_dur):
     start_t = max(0, video_dur - 4)
@@ -829,11 +852,10 @@ def fetch_trending_tags():
     if PIXABAY_API_KEY:
         try:
             query = random.choice(PIXABAY_THEMES)
-            url = (
-                f"https://pixabay.com/api/?key={PIXABAY_API_KEY}"
-                f"&q={query}&per_page=5&category=technology"
+            r = requests.get(
+                f"https://pixabay.com/api/?key={PIXABAY_API_KEY}&q={query}&per_page=5&category=technology",
+                timeout=10
             )
-            r = requests.get(url, timeout=10)
             if r.status_code == 200:
                 tags = []
                 for hit in r.json().get('hits', [])[:3]:
@@ -850,7 +872,8 @@ def fetch_trending_tags():
         try:
             r = requests.get(
                 "https://api.pexels.com/v1/popular?per_page=5",
-                headers={"Authorization": PEXELS_API_KEY}, timeout=10
+                headers={"Authorization": PEXELS_API_KEY},
+                timeout=10
             )
             if r.status_code == 200:
                 tags = []
@@ -902,18 +925,15 @@ def smallcaps_unicode(t):
 
 
 # ==========================================
-# 19. CAPTION GENERATOR
+# 19. ENGLISH CAPTION GENERATOR
 # ==========================================
-def generate_caption(hook, main_text):
-    fact   = random.choice(FACTS)
-    tip    = random.choice(TIPS)
-    review = random.choice(REVIEWS)
+def generate_caption(hook, image_text):
+    fact   = random.choice(FACTS_EN)
+    tip    = random.choice(TIPS_EN)
+    review = random.choice(REVIEWS_EN)
+    body   = random.choice([fact, tip, review])
 
-    title_raw = random.choice(TITLE_TEMPLATES).format(
-        fact=fact, tip=tip, review=review
-    )
-    body = random.choice([fact, tip, review])
-    words = ["Web Dev", "React JS", "Python", "API", "Tech", "Flutter"]
+    words  = ["Web Dev", "React JS", "Python", "API", "Tech", "Flutter", "Node JS"]
     styled = random.choice([bold_unicode, italic_unicode, smallcaps_unicode])(
         random.choice(words)
     )
@@ -927,9 +947,9 @@ def generate_caption(hook, main_text):
     return (
         f"{d}\n"
         f"{hook}\n"
-        f"🔥 {title_raw}\n"
+        f"🔥 {image_text}\n"
         f"{d}\n\n"
-        f"{body}\n\n"
+        f"💡 {body}\n\n"
         f"━━━━━━━━━━━━━━━━\n"
         f"💼 {bold_unicode('Service')}: {styled}\n"
         f"📧 {italic_unicode('Email')}: rahulhaku52@gmail.com\n"
@@ -964,7 +984,7 @@ def upload_to_facebook(video_path, title, description):
         if 'id' in result:
             print(f"✅ Uploaded! ID: {result['id']}")
         else:
-            print(f"⚠️ Upload response: {result}")
+            print(f"⚠️ Upload: {result}")
         return result
     except Exception as e:
         print(f"❌ Upload error: {e}")
@@ -976,45 +996,51 @@ def upload_to_facebook(video_path, title, description):
 # ==========================================
 def main():
     print("=" * 55)
-    print(f"🚀 Bot Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"🚀 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"🔑 Pixabay : {'✅' if PIXABAY_API_KEY  else '❌'}")
     print(f"🔑 Pexels  : {'✅' if PEXELS_API_KEY   else '❌'}")
     print(f"🔑 Unsplash: {'✅' if UNSPLASH_API_KEY  else '❌'}")
     print(f"🔑 Facebook: {'✅' if PAGE_ID and ACCESS_TOKEN else '❌'}")
-    print(f"🖼️  Logo    : {'✅' if os.path.exists(LOGO_PATH) else '⚠️ Not found'}")
-    print(f"🔤 BN Font : {'✅' if os.path.exists(BENGALI_FONT_BOLD) else '⚠️ Will use fallback'}")
-    print(f"⏱️  Duration: {MIN_DURATION}s ~ {MAX_DURATION}s (target {TARGET_DURATION}s)")
+    print(f"🖼️  Logo    : {'✅' if os.path.exists(LOGO_PATH) else '⚠️'}")
+    print(f"⏱️  Duration: {MIN_DURATION}~{MAX_DURATION}s")
     print("=" * 55)
 
     img_path = voice_path = video_path = None
 
     try:
-        # 1. Content + Hook
-        hook      = random.choice(HOOKS)
-        main_text = random.choice(FACTS + TIPS + REVIEWS)
-        print(f"🎣 Hook: {hook}")
-        print(f"📝 Text: {main_text[:60]}...")
+        # ✅ 1. English hook + image text
+        hook       = random.choice(HOOKS)
+        image_text = random.choice(IMAGE_TEXTS)
 
-        # 2. Image
-        img_path = generate_image(main_text, hook)
-        print(f"🖼️  Image: {img_path}")
+        # ✅ 2. Voice text (Bengali/Hindi/English rotation)
+        voice_text, lang = pick_voice_text()
 
-        # 3. Voice (edge-tts)
-        full_text  = f"{hook}। {main_text}"
-        voice_path, voice_id = generate_voice(full_text)
-        print(f"🎙️  Voice: {voice_id}")
+        print(f"🎣 Hook      : {hook}")
+        print(f"🖼️  Image text: {image_text}")
+        print(f"🎙️  Voice lang: {lang}")
+        print(f"📢 Voice text: {voice_text[:60]}...")
 
-        # 4. Video
-        video_path = create_video(img_path, voice_path, main_text)
-        print(f"🎬 Video: {video_path}")
+        # 3. Generate image (English text)
+        img_path = generate_image(image_text, hook)
 
-        # 5. Caption
-        caption = generate_caption(hook, main_text)
-        print(f"\n📋 Caption preview:\n{caption[:250]}...\n")
+        # 4. Generate voice (Bengali/Hindi/English)
+        voice_path, voice_id = generate_voice(voice_text)
+        print(f"🎙️  Voice ID: {voice_id}")
 
-        # 6. Upload
-        print("📤 Uploading to Facebook...")
-        result = upload_to_facebook(video_path, f"{hook} {main_text[:50]}", caption)
+        # 5. Create video (English subtitle)
+        video_path = create_video(img_path, voice_path, image_text)
+
+        # 6. English caption
+        caption = generate_caption(hook, image_text)
+        print(f"\n📋 Caption:\n{caption[:300]}...\n")
+
+        # 7. Upload
+        print("📤 Uploading...")
+        result = upload_to_facebook(
+            video_path,
+            f"{hook} — {image_text}",
+            caption
+        )
         print(f"📊 Result: {result}")
 
     except Exception as e:
@@ -1023,11 +1049,15 @@ def main():
         traceback.print_exc()
 
     finally:
-        for label, path in [("image", img_path), ("voice", voice_path), ("video", video_path)]:
+        for label, path in [
+            ("image", img_path),
+            ("voice", voice_path),
+            ("video", video_path)
+        ]:
             if path and os.path.exists(path):
                 try:
                     os.unlink(path)
-                    print(f"🧹 Cleaned: {label}")
+                    print(f"🧹 {label} cleaned")
                 except Exception:
                     pass
 
