@@ -29,11 +29,18 @@ jobs:
             fonts-noto-color-emoji \
             fonts-noto-extra
 
-      - name: Install Python Dependencies
+      - name: Install Python Dependencies (from requirements.txt)
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip freeze  # ডিবাগের জন্য
+          # ব্যাকআপ: নিশ্চিত করতে সরাসরি ইনস্টল
+          pip install moviepy==1.0.3 imageio==2.28.1 imageio-ffmpeg==0.4.9
+          pip freeze
+
+      # ✅ MoviePy ইম্পোর্ট চেক (নিশ্চিত করতে)
+      - name: Verify MoviePy import
+        run: |
+          python -c "import moviepy.editor; print('✅ moviepy.editor imported successfully')" || exit 1
 
       - name: Run Video Poster Bot
         env:
