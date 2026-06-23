@@ -2,12 +2,13 @@ name: Auto Video Poster
 
 on:
   schedule:
-    - cron: '0 */5 * * *'
-  workflow_dispatch:
+    - cron: '0 */5 * * *'  # প্রতি ৫ ঘণ্টায় একবার
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   post:
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # Maximum 30 minutes
 
     steps:
       - name: Checkout Repository
@@ -16,31 +17,79 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
+          cache: 'pip'
 
       - name: Install System Dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
             ffmpeg \
             imagemagick \
+            fonts-liberation \
+            fonts-dejavu-core \
             fonts-noto-core \
             fonts-noto-cjk \
             fonts-noto-color-emoji \
             fonts-noto-extra
+          
+          # Verify FFmpeg installation
+          ffmpeg -version | head -n1
+          
+          # ImageMagick policy fix (for moviepy)
+          sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml || true
 
-      - name: Install Python Dependencies (from requirements.txt)
+      - name: Install Python Dependencies
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          # ব্যাকআপ: নিশ্চিত করতে সরাসরি ইনস্টল
-          pip install moviepy==1.0.3 imageio==2.28.1 imageio-ffmpeg==0.4.9
-          pip freeze
+          pip install --upgrade pip setuptools wheel
+          
+          # Install from requirements.txt
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          
+          # Ensure critical packages
+          pip install \
+            moviepy==1.0.3 \
+            imageio==2.34.0 \
+            imageio-ffmpeg==0.4.9 \
+            Pillow==10.2.0 \
+            requests==2.31.0 \
+            edge-tts==6.1.10 \
+            gtts==2.5.0
+          
+          # Show installed packages
+          echo "📦 Installed packages:"
+          pip list | grep -E "moviepy|imageio|Pillow|edge-tts|requests"
 
-      # ✅ MoviePy ইম্পোর্ট চেক (নিশ্চিত করতে)
-      - name: Verify MoviePy import
+      - name: Verify MoviePy Installation
         run: |
-          python -c "import moviepy.editor; print('✅ moviepy.editor imported successfully')" || exit 1
+          python -c "
+          import sys
+          try:
+              import moviepy.editor as mp
+              print('✅ moviepy.editor imported successfully')
+              print(f'MoviePy version: {mp.__version__}')
+          except Exception as e:
+              print(f'❌ MoviePy import failed: {e}')
+              sys.exit(1)
+          "
+
+      - name: Verify FFmpeg Integration
+        run: |
+          python -c "
+          from moviepy.config import get_setting
+          ffmpeg_bin = get_setting('FFMPEG_BINARY')
+          print(f'FFmpeg binary: {ffmpeg_bin}')
+          import subprocess
+          subprocess.run([ffmpeg_bin, '-version'], check=True, capture_output=True)
+          print('✅ FFmpeg integration verified')
+          "
+
+      - name: Check Font Availability
+        run: |
+          echo "🔍 Checking available fonts..."
+          fc-list | grep -i "liberation\|dejavu\|noto" | head -n 10 || echo "⚠️ No matching fonts found"
 
       - name: Run Video Poster Bot
         env:
@@ -49,4 +98,44 @@ jobs:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
-        run: python bot.py
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          echo "🚀 Starting Video Poster Bot..."
+          python bot.py
+        continue-on-error: false
+
+      - name: Upload Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-logs
+          path: |
+            *.log
+            /tmp/*.mp4
+            /tmp/*.mp3
+            /tmp/*.png
+          retention-days: 2
+
+      - name: Cleanup Temp Files
+        if: always()
+        run: |
+          echo "🧹 Cleaning up temporary files..."
+          rm -f /tmp/tmp*.mp4 /tmp/tmp*.mp3 /tmp/tmp*.png /tmp/tmp*.jpg
+          echo "✅ Cleanup complete"
+
+      - name: Job Summary
+        if: always()
+        run: |
+          echo "## 📊 Job Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Duration**: $(date -u -d @$(($(date +%s) - $GITHUB_RUN_STARTED_AT)) +%M:%S)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Python**: 3.11" >> $GITHUB_STEP_SUMMARY
+          echo "- **MoviePy**: 1.0.3" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Video posted successfully!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Job failed. Check logs above.**" >> $GITHUB_STEP_SUMMARY
+          fi
