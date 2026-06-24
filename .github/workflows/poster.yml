@@ -51,7 +51,8 @@ jobs:
           try:
               import moviepy.editor as mp
               print('✅ moviepy.editor OK')
-              print(f'MoviePy version: {mp.__version__}')
+              import moviepy
+              print(f'MoviePy version: {moviepy.__version__}')
               from moviepy.config import get_setting
               print(f'FFmpeg: {get_setting(\"FFMPEG_BINARY\")}')
           except Exception as e:
