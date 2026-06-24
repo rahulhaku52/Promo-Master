@@ -9,7 +9,7 @@ from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import edge_tts
 from moviepy.editor import (
-    ImageClip, AudioFileClip,
+    VideoFileClip, ImageClip, AudioFileClip,
     CompositeVideoClip
 )
 import moviepy.audio.fx.all as afx
@@ -22,13 +22,14 @@ ACCESS_TOKEN     = os.environ.get('FACEBOOK_ACCESS_TOKEN')
 PIXABAY_API_KEY  = os.environ.get('PIXABAY_API_KEY')
 PEXELS_API_KEY   = os.environ.get('PEXELS_API_KEY')
 UNSPLASH_API_KEY = os.environ.get('UNSPLASH_API_KEY')
+GEMINI_API_KEY   = os.environ.get('GEMINI_API_KEY')
 
 LOGO_PATH = "logo.png"
 
 # Duration
-MIN_DURATION    = 20
-MAX_DURATION    = 45
-TARGET_DURATION = 30
+MIN_DURATION    = 15
+MAX_DURATION    = 25
+TARGET_DURATION = 20
 
 # Bengali Font
 BENGALI_FONT_BOLD = "/usr/share/fonts/truetype/noto/NotoSansBengali-Bold.ttf"
@@ -36,19 +37,57 @@ BENGALI_FONT_REG  = "/usr/share/fonts/truetype/noto/NotoSansBengali-Regular.ttf"
 
 # edge-tts voices (Bengali + Hindi + English)
 EDGE_VOICES = [
-    "bn-BD-NabanitaNeural",   # Bengali Female
-    "bn-BD-PradeepNeural",    # Bengali Male
-    "bn-IN-TanishaaNeural",   # Bengali India Female
-    "hi-IN-SwaraNeural",      # Hindi Female
-    "hi-IN-MadhurNeural",     # Hindi Male
-    "en-US-JennyNeural",      # English Fallback
+    "bn-BD-NabanitaNeural",
+    "bn-BD-PradeepNeural",
+    "bn-IN-TanishaaNeural",
+    "hi-IN-SwaraNeural",
+    "hi-IN-MadhurNeural",
+    "en-US-JennyNeural",
 ]
 
 # ==========================================
-# 2. CONTENT — ALL ENGLISH ✅
+# 2. TOPICS — AI generation এর জন্য seed
+# ==========================================
+TECH_TOPICS = [
+    "website optimization and page speed",
+    "React JS and modern frontend development",
+    "Python web development and automation",
+    "mobile app development with Flutter",
+    "SEO and digital marketing strategies",
+    "Node JS and backend development",
+    "TypeScript and large scale projects",
+    "UI UX design principles",
+    "Git version control best practices",
+    "API integration and REST services",
+    "Docker and deployment strategies",
+    "database optimization techniques",
+    "cybersecurity basics for developers",
+    "cloud computing and AWS basics",
+    "machine learning for beginners",
+    "freelancing tips for developers",
+    "open source contribution guide",
+    "VS Code tips and productivity hacks",
+    "JavaScript async programming",
+    "full stack development roadmap"
+]
+
+VIDEO_SEARCH_KEYWORDS = [
+    "technology workspace",
+    "coding programmer",
+    "computer screen code",
+    "software development",
+    "tech startup office",
+    "digital innovation",
+    "laptop programming",
+    "developer working",
+    "tech business",
+    "modern office workspace"
+]
+
+# ==========================================
+# 3. FALLBACK CONTENT
 # ==========================================
 
-# English Hooks
 HOOKS = [
     "🔥 Stop! This tip will change everything!",
     "💡 Watch closely — this is gold!",
@@ -60,42 +99,6 @@ HOOKS = [
     "💥 Game changer alert!"
 ]
 
-# English Facts
-FACTS_EN = [
-    "Website load time over 3 seconds loses 50% of visitors",
-    "Mobile-friendly websites rank higher on Google Search",
-    "React JS is the most demanded skill in 2026",
-    "You can build a web app in 10 minutes with Python",
-    "Modern apps are incomplete without API integration",
-    "Flutter lets you build Android & iOS apps together",
-    "SEO without content is like a car without fuel",
-    "Good UI design improves user experience by 10x",
-    "Node.js makes real-time apps easy to build",
-    "TypeScript reduces bugs in large projects significantly"
-]
-
-# English Tips
-TIPS_EN = [
-    "Use CSS Grid for layouts — easy & fast",
-    "Use async/await in JavaScript — escape callback hell",
-    "Use Git for version control — never lose your code",
-    "Learn VS Code shortcuts — work 3x faster",
-    "Deploy projects with Docker — reliable & simple",
-    "TypeScript is a must for large-scale projects",
-    "Practice coding at least 1 hour every day",
-    "Master Stack Overflow & GitHub for better solutions"
-]
-
-# English Reviews
-REVIEWS_EN = [
-    "My website was built in just 2 days! Amazing work!",
-    "The app is super fast and user-friendly — client loved it!",
-    "The design was exactly like my dream — perfect delivery!",
-    "Professional work, on-time delivery — 100% satisfied!",
-    "Low cost, best quality — I will hire again!"
-]
-
-# English Image Texts (short, punchy)
 IMAGE_TEXTS = [
     "Web Development Tips",
     "Coding Hacks That Work",
@@ -109,40 +112,20 @@ IMAGE_TEXTS = [
     "React JS Pro Tips"
 ]
 
-# English Voice Scripts (longer for audio duration)
-VOICE_SCRIPTS_EN = [
-    "Did you know? Website load time over 3 seconds loses half of your visitors. Optimize your site today for better results.",
-    "React JS is the most demanded skill in 2026. Start learning today and boost your career to the next level.",
-    "Mobile friendly websites rank higher on Google. Make sure your website looks great on all devices.",
-    "Python is so powerful that you can build a web app in just 10 minutes. Start your coding journey now.",
-    "Good UI design improves user experience by ten times. Invest in design and watch your business grow.",
-    "Git version control saves your code from disasters. Learn Git today and never lose your work again.",
-    "Flutter lets you build Android and iOS apps with one codebase. Save time and money with cross platform development.",
-    "SEO is the backbone of digital marketing. Without SEO your website is invisible to the world.",
-    "Node JS makes building real time applications super easy. Learn it and build the next big app.",
-    "TypeScript reduces bugs in large projects. Switch from JavaScript to TypeScript for cleaner code."
+FALLBACK_VOICE_SCRIPTS_BN = [
+    "আজকের টেক টিপস নিয়ে আমরা কথা বলব। ওয়েবসাইটের লোড টাইম যদি তিন সেকেন্ডের বেশি হয়, তাহলে প্রায় পঞ্চাশ ভাগ ভিজিটর চলে যায়। তাই আপনার সাইটের স্পিড অপ্টিমাইজ করা খুবই জরুরি। ইমেজ কম্প্রেস করুন, ক্যাশিং চালু করুন, এবং অপ্রয়োজনীয় প্লাগিন বন্ধ করুন। আজই এই পরিবর্তনগুলো করুন এবং আপনার ওয়েবসাইটকে আরও দ্রুত করুন। প্রতিদিনের টেক আপডেটের জন্য আমাদের ফলো করুন।",
+    "React JS আজকের দিনে সবচেয়ে জনপ্রিয় জাভাস্ক্রিপ্ট লাইব্রেরি। ২০২৬ সালে এটি সবচেয়ে বেশি চাহিদার স্কিল হিসেবে বিবেচিত হচ্ছে। কম্পোনেন্ট বেসড আর্কিটেকচার দিয়ে আপনি খুব দ্রুত ওয়েব অ্যাপ বানাতে পারবেন। ভার্চুয়াল ডম ব্যবহার করে React অ্যাপ অনেক দ্রুত চলে। আজই React শেখা শুরু করুন এবং আপনার ক্যারিয়ারকে নতুন উচ্চতায় নিয়ে যান। আমাদের সাথে থাকুন প্রতিদিন নতুন কিছু শেখার জন্য।",
 ]
 
-VOICE_SCRIPTS_BN = [
-    "জানেন কি? ওয়েবসাইটের লোড টাইম ৩ সেকেন্ডের বেশি হলে ৫০% ভিজিটর চলে যায়। আজই আপনার সাইট অপ্টিমাইজ করুন।",
-    "React JS ২০২৬ সালে সবচেয়ে বেশি চাহিদার স্কিল। আজই শেখা শুরু করুন এবং আপনার ক্যারিয়ার এগিয়ে নিন।",
-    "মোবাইল ফ্রেন্ডলি ওয়েবসাইট গুগলে বেশি র‍্যাঙ্ক পায়। আপনার ওয়েবসাইট সব ডিভাইসে সুন্দর দেখাচ্ছে তো?",
-    "Python দিয়ে মাত্র ১০ মিনিটে ওয়েব অ্যাপ বানানো যায়। আজই কোডিং শুরু করুন।",
-    "ভালো UI ডিজাইন ব্যবহারকারীর অভিজ্ঞতা ১০ গুণ বাড়িয়ে দেয়। ডিজাইনে বিনিয়োগ করুন।",
-    "Git দিয়ে কোড ভার্সন কন্ট্রোল করুন। আপনার কোড কখনো হারাবে না।",
-    "Flutter দিয়ে Android ও iOS দুটো অ্যাপ একসাথে বানানো যায়। সময় ও অর্থ দুটোই বাঁচান।",
-    "SEO ছাড়া ওয়েবসাইট থাকা মানে অন্ধকারে থাকা। আজই SEO শুরু করুন।"
+FALLBACK_VOICE_SCRIPTS_HI = [
+    "आज हम बात करेंगे वेबसाइट ऑप्टिमाइजेशन के बारे में। अगर आपकी वेबसाइट तीन सेकंड से ज्यादा लोड होती है, तो आधे से ज्यादा विजिटर चले जाते हैं। इसलिए अपनी साइट की स्पीड बढ़ाना बहुत जरूरी है। इमेज कंप्रेस करें, कैशिंग चालू करें और अनावश्यक प्लगइन हटाएं। आज ही ये बदलाव करें और अपनी वेबसाइट को तेज बनाएं। हर रोज टेक अपडेट के लिए हमें फॉलो करें।",
 ]
 
-VOICE_SCRIPTS_HI = [
-    "क्या आप जानते हैं? वेबसाइट की लोडिंग 3 सेकंड से ज्यादा होने पर 50% विजिटर चले जाते हैं। आज ही ऑप्टिमाइज़ करें।",
-    "React JS 2026 में सबसे ज्यादा डिमांडेड स्किल है। आज से ही सीखना शुरू करें और अपना करियर बनाएं।",
-    "Mobile friendly website Google पर ज्यादा rank पाती है। अपनी website को mobile friendly बनाएं।",
-    "Python से सिर्फ 10 मिनट में web app बना सकते हैं। आज से ही coding शुरू करें।",
-    "अच्छा UI design user experience 10 गुना बेहतर बनाता है। Design में invest करें।"
+FALLBACK_VOICE_SCRIPTS_EN = [
+    "Today we are talking about website optimization. Did you know that if your website takes more than three seconds to load, you lose about fifty percent of your visitors? This is a huge problem for any business. You need to compress your images, enable browser caching, and remove unnecessary plugins. These simple steps can dramatically improve your website speed. Follow us every day for more amazing tech tips and tricks that will help you grow your online presence.",
+    "React JS is the most popular JavaScript library in the world right now. In 2026, it is expected to be the most demanded skill in the job market. With component based architecture, you can build complex web applications very quickly and efficiently. The virtual DOM makes React apps extremely fast and responsive. If you want to build a successful career in web development, start learning React today. Stay with us for daily programming tips and tutorials.",
 ]
 
-# Hashtags
 FIXED_HASHTAGS = [
     "#webdevelopment", "#appdevelopment", "#shorts",
     "#codingtips", "#programming", "#tech"
@@ -156,93 +139,228 @@ TRENDING_TAGS = [
     "#seo", "#wordpress", "#laravel", "#entrepreneur"
 ]
 
-PIXABAY_THEMES = [
-    "technology", "coding", "computer",
-    "programming", "laptop", "digital",
-    "startup", "software", "internet"
-]
-
 # ==========================================
-# 3. COLOR THEMES
+# 4. COLOR THEMES
 # ==========================================
 COLOR_THEMES = [
     {
         "name": "Deep Ocean",
-        "color1": (5, 10, 48),
-        "color2": (0, 80, 180),
         "accent": (0, 200, 255),
         "highlight": (0, 230, 255)
     },
     {
         "name": "Sunset Fire",
-        "color1": (40, 5, 5),
-        "color2": (180, 60, 0),
         "accent": (255, 150, 0),
         "highlight": (255, 200, 50)
     },
     {
         "name": "Purple Galaxy",
-        "color1": (15, 5, 40),
-        "color2": (80, 0, 150),
         "accent": (180, 0, 255),
         "highlight": (220, 150, 255)
     },
     {
         "name": "Forest Dark",
-        "color1": (5, 25, 15),
-        "color2": (0, 80, 50),
         "accent": (0, 200, 100),
         "highlight": (100, 255, 180)
     },
     {
         "name": "Steel Blue",
-        "color1": (10, 20, 35),
-        "color2": (30, 60, 120),
         "accent": (80, 160, 255),
         "highlight": (150, 220, 255)
     },
     {
         "name": "Neon Dark",
-        "color1": (5, 5, 5),
-        "color2": (20, 20, 40),
         "accent": (255, 0, 150),
         "highlight": (0, 255, 200)
     }
 ]
 
 # ==========================================
-# 4. FONT LOADER
+# 5. GEMINI AI GENERATOR
 # ==========================================
-def load_fonts():
-    bold_paths = [
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
-        "/usr/share/fonts/truetype/ubuntu/Ubuntu-Bold.ttf",
-        BENGALI_FONT_BOLD,
-    ]
-    reg_paths = [
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
-        "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf",
-        BENGALI_FONT_REG,
-    ]
-    bold = next((p for p in bold_paths if os.path.exists(p)), None)
-    reg  = next((p for p in reg_paths  if os.path.exists(p)), None)
-    print(f"✅ Bold font: {os.path.basename(bold) if bold else 'default'}")
-    print(f"✅ Reg font:  {os.path.basename(reg)  if reg  else 'default'}")
-    return {'bold': bold, 'regular': reg or bold}
+def call_gemini(prompt, max_tokens=500):
+    if not GEMINI_API_KEY:
+        print("⚠️ GEMINI_API_KEY not set")
+        return None
+
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    )
+
+    payload = {
+        "contents": [
+            {
+                "parts": [{"text": prompt}]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.9,
+            "maxOutputTokens": max_tokens,
+            "topP": 0.95,
+        }
+    }
+
+    try:
+        resp = requests.post(url, json=payload, timeout=30)
+        if resp.status_code == 200:
+            data = resp.json()
+            text = (
+                data.get("candidates", [{}])[0]
+                .get("content", {})
+                .get("parts", [{}])[0]
+                .get("text", "")
+                .strip()
+            )
+            if text:
+                print(f"✅ Gemini response received ({len(text)} chars)")
+                return text
+            else:
+                print("⚠️ Gemini: empty response")
+                return None
+        else:
+            print(f"⚠️ Gemini HTTP {resp.status_code}")
+            return None
+    except Exception as e:
+        print(f"⚠️ Gemini error: {e}")
+        return None
+
+
+def generate_voice_script_ai(lang, topic):
+    if lang == 'bn':
+        lang_instruction = (
+            "বাংলা ভাষায় লিখুন। "
+            "স্ক্রিপ্টটি স্বাভাবিক গতিতে পড়লে ঠিক ১৫ থেকে ২০ সেকেন্ড সময় নেয়। "
+            "মোট শব্দ সংখ্যা ১২০ থেকে ১৫০ এর মধ্যে রাখুন। "
+            "কথ্য ভাষায় লিখুন যাতে text-to-speech ভালো শোনায়।"
+        )
+        fallback_list = FALLBACK_VOICE_SCRIPTS_BN
+    elif lang == 'hi':
+        lang_instruction = (
+            "हिंदी भाषा में लिखें। "
+            "स्क्रिप्ट को सामान्य गति से पढ़ने पर ठीक 15 से 20 सेकंड लगने चाहिए। "
+            "कुल शब्द संख्या 120 से 150 के बीच रखें। "
+            "बोलचाल की भाषा में लिखें।"
+        )
+        fallback_list = FALLBACK_VOICE_SCRIPTS_HI
+    else:
+        lang_instruction = (
+            "Write in clear, simple English. "
+            "The script should take exactly 15 to 20 seconds to read at normal pace. "
+            "Keep total word count between 120 and 150 words. "
+            "Write in conversational style."
+        )
+        fallback_list = FALLBACK_VOICE_SCRIPTS_EN
+
+    prompt = f"""You are a social media content creator for a tech page.
+
+Write a voice-over script for a short tech video about: {topic}
+
+Rules:
+- {lang_instruction}
+- Topic: {topic}
+- Make it engaging and informative
+- End with a call to action (follow us, contact us)
+- Contact: rahulhaku52@gmail.com or Telegram t.me/hacker_52
+- NO hashtags in script
+- NO markdown formatting
+- Write ONLY the script text directly"""
+
+    result = call_gemini(prompt, max_tokens=400)
+
+    if result and len(result.split()) >= 80:
+        result = result.strip().replace('**', '').replace('*', '').replace('#', '')
+        print(f"✅ Voice script AI ({lang}) — {len(result.split())} words")
+        return result, 'ai'
+    else:
+        print(f"⚠️ Voice script fallback ({lang})")
+        return random.choice(fallback_list), 'fallback'
+
+
+def generate_image_text_ai(topic):
+    prompt = f"""Create a short, punchy headline for a tech social media video.
+
+Topic: {topic}
+
+Rules:
+- Maximum 5-6 words only
+- Catchy and attention-grabbing
+- No hashtags, no emojis
+- Title case
+- Examples: "React JS Pro Tips", "Build Apps Faster"
+- Write ONLY the headline"""
+
+    result = call_gemini(prompt, max_tokens=30)
+
+    if result:
+        result = result.strip().strip('"').strip("'")
+        result = result.replace('**', '').replace('*', '').replace('#', '')
+        words = result.split()
+        if 2 <= len(words) <= 8:
+            print(f"✅ Image text AI: '{result}'")
+            return result, 'ai'
+
+    print("⚠️ Image text fallback")
+    return random.choice(IMAGE_TEXTS), 'fallback'
+
+
+def generate_hook_ai(topic):
+    prompt = f"""Create an attention-grabbing hook for a tech video.
+
+Topic: {topic}
+
+Rules:
+- Maximum 8-10 words
+- Start with emoji
+- Make it urgent, exciting
+- Examples: "🔥 This trick will save you hours!", "💡 Secret developers hide!"
+- Write ONLY the hook"""
+
+    result = call_gemini(prompt, max_tokens=40)
+
+    if result:
+        result = result.strip().strip('"').strip("'")
+        words = result.split()
+        if 3 <= len(words) <= 15:
+            print(f"✅ Hook AI: '{result}'")
+            return result, 'ai'
+
+    print("⚠️ Hook fallback")
+    return random.choice(HOOKS), 'fallback'
+
+
+def generate_caption_ai(hook, image_text, topic):
+    prompt = f"""Write a Facebook post caption for a tech video.
+
+Hook: {hook}
+Title: {image_text}
+Topic: {topic}
+
+Rules:
+- English language
+- Use emojis
+- Include 3-4 facts/tips
+- Call to action
+- Contact: rahulhaku52@gmail.com | t.me/hacker_52
+- Length: 150-250 words
+- NO hashtags (added separately)
+- Write caption directly"""
+
+    result = call_gemini(prompt, max_tokens=500)
+
+    if result and len(result.split()) >= 50:
+        result = result.strip().replace('**', '').replace('*', '')
+        print(f"✅ Caption AI ({len(result.split())} words)")
+        return result, 'ai'
+
+    print("⚠️ Caption fallback")
+    return None, 'fallback'
 
 
 # ==========================================
-# 5. PIL TEXT OVERLAY (English — No Font Issue)
+# 6. PIL TEXT OVERLAY
 # ==========================================
 def create_text_overlay(text, img_width=1200, accent_color=(0, 200, 255)):
-    """
-    PIL দিয়ে English subtitle image তৈরি।
-    MoviePy TextClip এর বদলে ImageClip হিসেবে ব্যবহার।
-    """
     font_paths = [
         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -256,7 +374,6 @@ def create_text_overlay(text, img_width=1200, accent_color=(0, 200, 255)):
     except Exception:
         font = font_small = ImageFont.load_default()
 
-    # Word wrap
     words, lines, current = text.split(), [], ""
     for word in words:
         test = f"{current} {word}".strip()
@@ -277,15 +394,12 @@ def create_text_overlay(text, img_width=1200, accent_color=(0, 200, 255)):
     overlay = Image.new('RGBA', (img_width, box_h), (0, 0, 0, 0))
     draw    = ImageDraw.Draw(overlay)
 
-    # Background gradient
     for y in range(box_h):
         alpha = int(160 + 60 * (y / box_h))
         draw.line([(0, y), (img_width, y)], fill=(0, 0, 0, alpha))
 
-    # Top accent line
     draw.rectangle([(0, 0), (img_width, 4)], fill=(*accent_color, 230))
 
-    # Text
     y_pos = pad
     for i, line in enumerate(lines):
         draw.text((52, y_pos + 2), line, font=font, fill=(0, 0, 0, 210))
@@ -293,527 +407,236 @@ def create_text_overlay(text, img_width=1200, accent_color=(0, 200, 255)):
         draw.text((50, y_pos), line, font=font, fill=color)
         y_pos += line_h
 
-    # Contact bar
     contact = "📧 rahulhaku52@gmail.com  |  📱 t.me/hacker_52"
     draw.rectangle([(0, box_h - 38), (img_width, box_h)], fill=(0, 0, 0, 230))
     draw.text((50, box_h - 30), contact, font=font_small, fill=(200, 200, 200, 255))
 
     tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
     overlay.save(tmp.name)
-    print(f"✅ Text overlay created")
+    print("✅ Text overlay created")
     return tmp.name
 
 
 # ==========================================
-# 6. VOICE GENERATOR (Bengali/Hindi/English)
+# 7. VOICE GENERATOR
 # ==========================================
 async def _edge_generate(text, voice, path):
     await edge_tts.Communicate(text, voice).save(path)
 
 
-def generate_voice(text):
-    """
-    ✅ Voice language rotation:
-    Bengali → Hindi → English
-    """
+def generate_voice(text, lang='en'):
     tmp = tempfile.NamedTemporaryFile(suffix='.mp3', delete=False)
 
-    # Extended text for longer audio
-    extended = (
-        f"{text}. "
-        f"Follow us for daily tech tips. "
-        f"Contact: rahulhaku52 at gmail dot com "
-        f"or Telegram t dot me slash hacker underscore 52."
-    )
+    if lang == 'bn':
+        voice_priority = [
+            "bn-BD-NabanitaNeural",
+            "bn-BD-PradeepNeural",
+            "bn-IN-TanishaaNeural",
+        ]
+    elif lang == 'hi':
+        voice_priority = [
+            "hi-IN-SwaraNeural",
+            "hi-IN-MadhurNeural",
+        ]
+    else:
+        voice_priority = [
+            "en-US-JennyNeural",
+            "en-US-GuyNeural",
+        ]
 
-    for voice in EDGE_VOICES:
+    for voice in voice_priority:
         try:
-            asyncio.run(_edge_generate(extended, voice, tmp.name))
+            asyncio.run(_edge_generate(text, voice, tmp.name))
             if os.path.exists(tmp.name) and os.path.getsize(tmp.name) > 1000:
                 print(f"✅ Voice: {voice}")
                 return tmp.name, voice
         except Exception as e:
             print(f"⚠️ edge-tts {voice}: {e}")
 
-    # Fallback gTTS
     try:
         from gtts import gTTS
-        tts = gTTS(text=text, lang='en', slow=False)
+        gtts_lang = 'bn' if lang == 'bn' else ('hi' if lang == 'hi' else 'en')
+        tts = gTTS(text=text, lang=gtts_lang, slow=False)
         tts.save(tmp.name)
-        print("✅ Voice: gTTS (en) fallback")
-        return tmp.name, 'en-gTTS'
+        print(f"✅ Voice: gTTS ({gtts_lang})")
+        return tmp.name, f'gTTS-{gtts_lang}'
     except Exception as e:
         print(f"❌ All voice failed: {e}")
 
     return tmp.name, 'none'
 
 
-def pick_voice_text():
-    """
-    Random rotation: Bengali → Hindi → English voice scripts
-    """
-    choice = random.choices(
+def pick_voice_text(topic):
+    lang = random.choices(
         ['bn', 'hi', 'en'],
         weights=[40, 30, 30]
     )[0]
 
-    if choice == 'bn':
-        return random.choice(VOICE_SCRIPTS_BN), 'bn'
-    elif choice == 'hi':
-        return random.choice(VOICE_SCRIPTS_HI), 'hi'
-    else:
-        return random.choice(VOICE_SCRIPTS_EN), 'en'
+    script, source = generate_voice_script_ai(lang, topic)
+    return script, lang, source
 
 
 # ==========================================
-# 7. IMAGE SOURCES
+# 8. PEXELS VIDEO DOWNLOADER
 # ==========================================
-def fetch_pixabay_image(query):
-    if not PIXABAY_API_KEY:
-        return None
-    try:
-        url = (
-            f"https://pixabay.com/api/?key={PIXABAY_API_KEY}"
-            f"&q={query}&image_type=photo&category=technology"
-            f"&orientation=horizontal&per_page=10&safesearch=true"
-            f"&min_width=1200&min_height=600"
-        )
-        r = requests.get(url, timeout=15)
-        if r.status_code == 200:
-            hits = r.json().get('hits', [])
-            if hits:
-                chosen  = random.choice(hits[:5])
-                img_url = chosen.get('webformatURL') or chosen.get('largeImageURL')
-                ir = requests.get(img_url, timeout=20)
-                if ir.status_code == 200:
-                    img = Image.open(io.BytesIO(ir.content)).convert('RGB')
-                    img = img.resize((1200, 628), Image.LANCZOS)
-                    print(f"✅ Pixabay: {chosen.get('tags','')[:30]}")
-                    return img
-    except Exception as e:
-        print(f"⚠️ Pixabay: {e}")
-    return None
-
-
-def fetch_pexels_image(query):
+def fetch_pexels_video(query):
+    """
+    Pexels Video API থেকে real stock video download করে
+    """
     if not PEXELS_API_KEY:
+        print("⚠️ PEXELS_API_KEY not set")
         return None
-    try:
-        url = f"https://api.pexels.com/v1/search?query={query}&per_page=10&orientation=landscape"
-        r = requests.get(url, headers={"Authorization": PEXELS_API_KEY}, timeout=15)
-        if r.status_code == 200:
-            photos = r.json().get('photos', [])
-            if photos:
-                chosen = random.choice(photos[:5])
-                ir = requests.get(chosen['src']['large'], timeout=20)
-                if ir.status_code == 200:
-                    img = Image.open(io.BytesIO(ir.content)).convert('RGB')
-                    img = img.resize((1200, 628), Image.LANCZOS)
-                    print("✅ Pexels image")
-                    return img
-    except Exception as e:
-        print(f"⚠️ Pexels: {e}")
-    return None
 
-
-def fetch_unsplash_image(query):
-    if not UNSPLASH_API_KEY:
-        return None
     try:
-        url = (
-            f"https://api.unsplash.com/photos/random"
-            f"?query={query}&orientation=landscape&count=1"
-        )
+        url = f"https://api.pexels.com/videos/search?query={query}&per_page=15&orientation=landscape"
+        
         r = requests.get(
             url,
-            headers={"Authorization": f"Client-ID {UNSPLASH_API_KEY}"},
-            timeout=15
-        )
-        if r.status_code == 200:
-            data    = r.json()
-            img_url = None
-            if isinstance(data, list) and data:
-                img_url = data[0].get('urls', {}).get('regular')
-            elif isinstance(data, dict):
-                img_url = data.get('urls', {}).get('regular')
-            if img_url:
-                ir = requests.get(img_url, timeout=20)
-                if ir.status_code == 200:
-                    img = Image.open(io.BytesIO(ir.content)).convert('RGB')
-                    img = img.resize((1200, 628), Image.LANCZOS)
-                    print("✅ Unsplash image")
-                    return img
-    except Exception as e:
-        print(f"⚠️ Unsplash: {e}")
-    return None
-
-
-# ==========================================
-# 8. GRADIENT BACKGROUND
-# ==========================================
-def create_gradient_background(theme, width=1200, height=628):
-    img  = Image.new('RGB', (width, height))
-    draw = ImageDraw.Draw(img)
-    c1, c2, accent = theme['color1'], theme['color2'], theme['accent']
-
-    for y in range(height):
-        t = y / height
-        draw.line(
-            [(0, y), (width, y)],
-            fill=(
-                int(c1[0] + (c2[0] - c1[0]) * t),
-                int(c1[1] + (c2[1] - c1[1]) * t),
-                int(c1[2] + (c2[2] - c1[2]) * t),
-            )
+            headers={"Authorization": PEXELS_API_KEY},
+            timeout=20
         )
 
-    ov = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-    od = ImageDraw.Draw(ov)
-    od.ellipse([width - 300, -100, width + 50, 300], fill=(*accent, 20))
-    od.ellipse([-80, height - 250, 200, height + 30], fill=(*accent, 15))
+        if r.status_code != 200:
+            print(f"⚠️ Pexels video API: {r.status_code}")
+            return None
 
-    img = Image.alpha_composite(img.convert('RGBA'), ov).convert('RGB')
-    print("✅ Gradient background")
-    return img
+        data = r.json()
+        videos = data.get("videos", [])
 
+        if not videos:
+            print(f"⚠️ No videos found for '{query}'")
+            return None
 
-# ==========================================
-# 9. PROFESSIONAL OVERLAY
-# ==========================================
-def add_professional_overlay(img, theme):
-    width, height = img.size
-    ov = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-    od = ImageDraw.Draw(ov)
+        # Random select from top 5
+        selected = random.choice(videos[:5])
 
-    for y in range(height):
-        alpha = int(50 + 120 * (y / height))
-        od.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
+        # Get best quality video file
+        video_files = selected.get("video_files", [])
+        
+        best_video = None
+        for vf in video_files:
+            # Prefer HD quality (1280x720 or higher)
+            if vf.get("width", 0) >= 1280:
+                best_video = vf
+                break
+        
+        # Fallback to any quality
+        if not best_video and video_files:
+            best_video = video_files[0]
 
-    # Bottom gradient bar for text readability
-    for y in range(height - 220, height):
-        t     = (y - (height - 220)) / 220
-        alpha = int(200 * t)
-        od.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
+        if not best_video:
+            print("⚠️ No video file found")
+            return None
 
-    img  = Image.alpha_composite(img.convert('RGBA'), ov).convert('RGB')
-    draw = ImageDraw.Draw(img)
-    accent = theme['accent']
-    draw.rectangle([(0, 0), (width, 5)], fill=accent)
-    draw.rectangle([(0, height - 5), (width, height)], fill=accent)
-    return img
+        video_url = best_video.get("link")
+        
+        print(f"⬇️ Downloading Pexels video: {video_url[:50]}...")
 
+        # Download video
+        vr = requests.get(video_url, timeout=90)
 
-# ==========================================
-# 10. TEXT WRAP
-# ==========================================
-def wrap_text(text, font, max_width, draw):
-    words, lines, current = text.split(), [], ""
-    for word in words:
-        test = f"{current} {word}".strip()
-        try:
-            w = draw.textlength(test, font=font)
-        except Exception:
-            w = len(test) * 20
-        if w <= max_width:
-            current = test
-        else:
-            if current:
-                lines.append(current)
-            current = word
-    if current:
-        lines.append(current)
-    return lines
+        if vr.status_code != 200:
+            print(f"⚠️ Video download failed: {vr.status_code}")
+            return None
 
+        # Save to temp file
+        temp_video = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
+        
+        with open(temp_video.name, "wb") as f:
+            f.write(vr.content)
 
-# ==========================================
-# 11. LAYOUTS (English Text — Clean)
-# ==========================================
-def draw_bottom_card(img, draw, text, hook, theme, fonts, width, height):
-    accent, highlight = theme['accent'], theme['highlight']
-    f_large  = fonts['large']
-    f_small  = fonts['small']
-    f_tiny   = fonts['tiny']
+        print(f"✅ Pexels video downloaded: {os.path.getsize(temp_video.name) / 1024 / 1024:.1f}MB")
+        
+        return temp_video.name
 
-    card_y = int(height * 0.46)
-
-    ov = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-    od = ImageDraw.Draw(ov)
-    od.rectangle([0, card_y, width, height], fill=(0, 0, 0, 190))
-    od.rectangle([0, card_y, width, card_y + 5], fill=(*accent, 230))
-    merged = Image.alpha_composite(img.convert('RGBA'), ov).convert('RGB')
-    img.paste(merged)
-    draw = ImageDraw.Draw(img)
-
-    # Hook
-    draw.text((40, card_y + 14), hook, fill=highlight, font=f_small)
-    draw.rectangle([(40, card_y + 50), (200, card_y + 53)], fill=accent)
-
-    # Main text
-    lines = wrap_text(text, f_large, width - 80, draw)
-    y_pos = card_y + 65
-    for i, line in enumerate(lines[:3]):
-        draw.text((42, y_pos + 2), line, fill=(0, 0, 0), font=f_large)
-        draw.text((40, y_pos), line,
-                  fill=highlight if i == 0 else (255, 255, 255), font=f_large)
-        y_pos += 52
-
-    # Bottom bar
-    draw.rectangle([0, height - 44, width, height], fill=(0, 0, 0))
-    draw.rectangle([0, height - 44, width, height - 41], fill=accent)
-    contact = "📧 rahulhaku52@gmail.com  |  📱 t.me/hacker_52"
-    try:
-        cw = int(draw.textlength(contact, font=f_tiny))
-    except Exception:
-        cw = 500
-    draw.text(((width - cw) // 2, height - 33),
-              contact, fill=(210, 210, 210), font=f_tiny)
-
-
-def draw_center_bold(img, draw, text, hook, theme, fonts, width, height):
-    accent, highlight = theme['accent'], theme['highlight']
-    f_large = fonts['large']
-    f_small = fonts['small']
-    f_tiny  = fonts['tiny']
-
-    ov     = Image.new('RGBA', (width, height), (0, 0, 0, 170))
-    merged = Image.alpha_composite(img.convert('RGBA'), ov).convert('RGB')
-    img.paste(merged)
-    draw = ImageDraw.Draw(img)
-
-    # Top bar
-    draw.rectangle([(0, 0), (width, 6)], fill=accent)
-    draw.text((40, 16), "⚡ @hacker_52", fill=(255, 255, 255), font=f_small)
-
-    # Hook centered
-    try:
-        hw = int(draw.textlength(hook, font=f_small))
-    except Exception:
-        hw = 300
-    draw.text(((width - hw) // 2, 75), hook, fill=highlight, font=f_small)
-    draw.rectangle([(width // 2 - 80, 115), (width // 2 + 80, 119)], fill=accent)
-
-    # Main text
-    lines = wrap_text(text, f_large, width - 120, draw)
-    y_pos = 138
-    for i, line in enumerate(lines[:3]):
-        try:
-            lw = int(draw.textlength(line, font=f_large))
-        except Exception:
-            lw = len(line) * 25
-        x = (width - lw) // 2
-        draw.text((x + 2, y_pos + 2), line, fill=(0, 0, 0), font=f_large)
-        draw.text((x, y_pos), line,
-                  fill=highlight if i == 0 else (255, 255, 255), font=f_large)
-        y_pos += 56
-
-    # Bottom
-    draw.rectangle([(0, height - 6), (width, height)], fill=accent)
-    draw.rectangle([(0, height - 44), (width, height - 6)], fill=(0, 0, 0))
-    contact = "📧 rahulhaku52@gmail.com  |  📱 t.me/hacker_52"
-    try:
-        cw = int(draw.textlength(contact, font=f_tiny))
-    except Exception:
-        cw = 500
-    draw.text(((width - cw) // 2, height - 35),
-              contact, fill=(210, 210, 210), font=f_tiny)
-
-
-def draw_top_title(img, draw, text, hook, theme, fonts, width, height):
-    accent, highlight = theme['accent'], theme['highlight']
-    f_large = fonts['large']
-    f_small = fonts['small']
-    f_tiny  = fonts['tiny']
-
-    card_h = int(height * 0.44)
-    ov = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-    od = ImageDraw.Draw(ov)
-    od.rectangle([0, 0, width, card_h], fill=(0, 0, 0, 195))
-    od.rectangle([0, card_h - 5, width, card_h], fill=(*accent, 220))
-    merged = Image.alpha_composite(img.convert('RGBA'), ov).convert('RGB')
-    img.paste(merged)
-    draw = ImageDraw.Draw(img)
-
-    # Brand + date
-    draw.text((40, 15), "⚡ @hacker_52", fill=accent, font=f_small)
-    date_str = datetime.now().strftime("%d %b %Y")
-    try:
-        dw = int(draw.textlength(date_str, font=f_tiny))
-    except Exception:
-        dw = 90
-    draw.text((width - dw - 30, 20), date_str, fill=(180, 180, 180), font=f_tiny)
-
-    # Hook
-    draw.text((40, 58), hook, fill=highlight, font=f_small)
-
-    # Main text
-    lines = wrap_text(text, f_large, width - 80, draw)
-    y_pos = 100
-    for i, line in enumerate(lines[:3]):
-        draw.text((42, y_pos + 2), line, fill=(0, 0, 0), font=f_large)
-        draw.text((40, y_pos), line,
-                  fill=highlight if i == 0 else (255, 255, 255), font=f_large)
-        y_pos += 52
-
-    # Bottom bar
-    bot_ov = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-    bd = ImageDraw.Draw(bot_ov)
-    bd.rectangle([0, height - 48, width, height], fill=(0, 0, 0, 210))
-    img.paste(Image.alpha_composite(img.convert('RGBA'), bot_ov).convert('RGB'))
-    draw = ImageDraw.Draw(img)
-
-    draw.rectangle([0, height - 48, width, height - 45], fill=accent)
-    contact = "📧 rahulhaku52@gmail.com  |  📱 t.me/hacker_52"
-    try:
-        cw = int(draw.textlength(contact, font=f_tiny))
-    except Exception:
-        cw = 500
-    draw.text(((width - cw) // 2, height - 38),
-              contact, fill=(210, 210, 210), font=f_tiny)
-
-
-# ==========================================
-# 12. ADD TEXT TO IMAGE
-# ==========================================
-def add_stylish_text(img, text, hook, theme, font_paths, layout):
-    draw = ImageDraw.Draw(img)
-    width, height = img.size
-
-    try:
-        bp = font_paths.get('bold')
-        rp = font_paths.get('regular') or bp
-        if bp and os.path.exists(bp):
-            fonts = {
-                'large':  ImageFont.truetype(bp, 46),
-                'medium': ImageFont.truetype(bp, 33),
-                'small':  ImageFont.truetype(rp, 28),
-                'tiny':   ImageFont.truetype(rp, 22),
-            }
-        else:
-            raise OSError
-    except Exception:
-        d = ImageFont.load_default()
-        fonts = {'large': d, 'medium': d, 'small': d, 'tiny': d}
-        print("⚠️ Default font")
-
-    args = (img, draw, text, hook, theme, fonts, width, height)
-    if layout == 'bottom_card':
-        draw_bottom_card(*args)
-    elif layout == 'center_bold':
-        draw_center_bold(*args)
-    elif layout == 'top_title':
-        draw_top_title(*args)
-
-    return img
-
-
-# ==========================================
-# 13. LOGO ON IMAGE
-# ==========================================
-def add_logo_to_image(img):
-    if not os.path.exists(LOGO_PATH):
-        return img
-    try:
-        logo = Image.open(LOGO_PATH).convert("RGBA")
-        iw, ih = img.size
-        lw = iw // 7
-        lh = int(logo.size[1] * (lw / logo.size[0]))
-        logo = logo.resize((lw, lh), Image.LANCZOS)
-        base = img.convert('RGBA')
-        base.paste(logo, (iw - lw - 20, ih - lh - 55), logo)
-        img = base.convert('RGB')
-        print("✅ Logo added")
     except Exception as e:
-        print(f"⚠️ Logo: {e}")
-    return img
+        print(f"❌ fetch_pexels_video error: {e}")
+        return None
 
 
 # ==========================================
-# 14. MAIN IMAGE GENERATOR
+# 9. VIDEO CREATOR (Real Video Background)
 # ==========================================
-def generate_image(image_text, hook):
-    width, height = 1200, 628
-    theme      = random.choice(COLOR_THEMES)
-    font_paths = load_fonts()
-    query      = random.choice(PIXABAY_THEMES)
-
-    img = fetch_pixabay_image(query)
-    if img is None:
-        img = fetch_pexels_image(query)
-    if img is None:
-        img = fetch_unsplash_image(query)
-    if img is None:
-        img = create_gradient_background(theme, width, height)
-    else:
-        img = add_professional_overlay(img, theme)
-
-    layout = random.choice(['bottom_card', 'center_bold', 'top_title'])
-    print(f"✅ Layout: {layout} | Theme: {theme['name']}")
-
-    img = add_stylish_text(img, image_text, hook, theme, font_paths, layout)
-    img = add_logo_to_image(img)
-
-    tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
-    img.save(tmp.name, quality=95)
-    return tmp.name
-
-
-# ==========================================
-# 15. VIDEO CREATOR
-# ==========================================
-def create_video(image_path, voice_path, subtitle_text, theme_accent=(0, 200, 255)):
+def create_video(background_video_path, voice_path, subtitle_text, theme_accent=(0, 200, 255)):
+    """
+    Real stock video + voice + subtitle → final video
+    """
     output_path = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False).name
     overlay_path = None
 
     try:
+        # Load audio
         audio_clip = AudioFileClip(voice_path)
-        audio_dur  = audio_clip.duration
-        print(f"🎙️ Audio: {audio_dur:.1f}s")
+        audio_dur = audio_clip.duration
+        print(f"🎙️ Audio duration: {audio_dur:.1f}s")
 
-        video_dur = max(audio_dur, MIN_DURATION, TARGET_DURATION)
+        # Target video duration (15-20s)
+        video_dur = max(audio_dur, MIN_DURATION)
         video_dur = min(video_dur, MAX_DURATION)
-        print(f"🎬 Video: {video_dur:.1f}s")
+        print(f"🎬 Target video duration: {video_dur:.1f}s")
 
-        if audio_dur < video_dur:
-            audio_clip = audio_clip.fx(afx.audio_loop, duration=video_dur)
-            print(f"🔁 Audio looped to {video_dur:.1f}s")
+        # Load background video
+        bg_video = VideoFileClip(background_video_path)
+        print(f"📹 Background video: {bg_video.duration:.1f}s")
 
-        img_clip   = ImageClip(image_path, duration=video_dur)
-        final_clip = img_clip.set_audio(audio_clip)
+        # Trim or loop background video to match audio
+        if bg_video.duration > video_dur:
+            # Video longer than needed — random start point
+            max_start = max(0, bg_video.duration - video_dur)
+            start_time = random.uniform(0, max_start)
+            bg_video = bg_video.subclip(start_time, start_time + video_dur)
+            print(f"✂️ Video trimmed: {start_time:.1f}s to {start_time + video_dur:.1f}s")
+        else:
+            # Video shorter — loop it
+            bg_video = bg_video.loop(duration=video_dur)
+            print(f"🔁 Video looped to {video_dur:.1f}s")
 
-        # ✅ PIL subtitle (no TextClip — no font issue)
+        # Resize to standard size
+        bg_video = bg_video.resize((1200, 628))
+
+        # Create subtitle overlay
         overlay_path = create_text_overlay(subtitle_text, 1200, theme_accent)
-        text_clip = (
+        
+        subtitle_clip = (
             ImageClip(overlay_path)
-            .set_position(('center', 'bottom'))
             .set_duration(min(12, video_dur))
-            .set_opacity(0.93)
+            .set_position(("center", "bottom"))
+            .set_opacity(0.92)
         )
 
-        # Logo clip
+        # Logo
         logo_clip = _get_logo_clip(video_dur)
 
-        clips = [final_clip, text_clip]
+        # Composite all clips
+        clips = [bg_video, subtitle_clip]
         if logo_clip:
             clips.append(logo_clip)
 
-        final = CompositeVideoClip(clips)
+        final = CompositeVideoClip(clips, size=(1200, 628))
+
+        # Add audio
+        final = final.set_audio(audio_clip)
+
+        # Export
         final.write_videofile(
             output_path,
-            fps=24,
-            codec='libx264',
-            audio_codec='aac',
+            codec="libx264",
+            audio_codec="aac",
+            fps=30,
+            preset="fast",
             verbose=False,
             logger=None,
-            preset='fast'
+            threads=4
         )
-        print(f"✅ Video: {output_path}")
+
+        print(f"✅ Real video created: {output_path}")
+        return output_path
 
     except Exception as e:
-        print(f"⚠️ Video error: {e}")
+        print(f"❌ create_video error: {e}")
         import traceback
         traceback.print_exc()
-        img_clip = ImageClip(image_path, duration=MIN_DURATION)
-        img_clip.write_videofile(output_path, fps=24, verbose=False, logger=None)
+        return None
 
     finally:
         if overlay_path and os.path.exists(overlay_path):
@@ -822,23 +645,21 @@ def create_video(image_path, voice_path, subtitle_text, theme_accent=(0, 200, 25
             except Exception:
                 pass
 
-    return output_path
-
 
 # ==========================================
-# 16. LOGO CLIP
+# 10. LOGO CLIP
 # ==========================================
 def _get_logo_clip(video_dur):
-    start_t = max(0, video_dur - 4)
+    start_t = max(0, video_dur - 5)
     if os.path.exists(LOGO_PATH):
         try:
             return (
                 ImageClip(LOGO_PATH)
-                .resize(height=75)
+                .resize(height=70)
                 .set_position(('right', 'bottom'))
-                .set_duration(4)
+                .set_duration(5)
                 .set_start(start_t)
-                .set_opacity(0.90)
+                .set_opacity(0.88)
             )
         except Exception as e:
             print(f"⚠️ Logo clip: {e}")
@@ -846,51 +667,15 @@ def _get_logo_clip(video_dur):
 
 
 # ==========================================
-# 17. TRENDING HASHTAGS
+# 11. TRENDING HASHTAGS
 # ==========================================
 def fetch_trending_tags():
-    if PIXABAY_API_KEY:
-        try:
-            query = random.choice(PIXABAY_THEMES)
-            r = requests.get(
-                f"https://pixabay.com/api/?key={PIXABAY_API_KEY}&q={query}&per_page=5&category=technology",
-                timeout=10
-            )
-            if r.status_code == 200:
-                tags = []
-                for hit in r.json().get('hits', [])[:3]:
-                    for tag in hit.get('tags', '').split(',')[:1]:
-                        c = tag.strip().replace(' ', '')
-                        if c and len(c) > 2:
-                            tags.append(f"#{c}")
-                if tags:
-                    return tags[:2]
-        except Exception as e:
-            print(f"⚠️ Pixabay tags: {e}")
-
-    if PEXELS_API_KEY:
-        try:
-            r = requests.get(
-                "https://api.pexels.com/v1/popular?per_page=5",
-                headers={"Authorization": PEXELS_API_KEY},
-                timeout=10
-            )
-            if r.status_code == 200:
-                tags = []
-                for p in r.json().get('photos', [])[:2]:
-                    alt = p.get('alt', '').replace(' ', '')
-                    if alt:
-                        tags.append(f"#{alt[:15]}")
-                if tags:
-                    return tags
-        except Exception as e:
-            print(f"⚠️ Pexels tags: {e}")
-
-    return random.sample(TRENDING_TAGS, 2)
+    # Simple fallback
+    return random.sample(TRENDING_TAGS, 3)
 
 
 # ==========================================
-# 18. UNICODE STYLES
+# 12. UNICODE STYLES
 # ==========================================
 def bold_unicode(t):
     m = {
@@ -905,6 +690,7 @@ def bold_unicode(t):
     }
     return ''.join(m.get(c, c) for c in t)
 
+
 def italic_unicode(t):
     m = {
         'a':'𝘢','b':'𝘣','c':'𝘤','d':'𝘥','e':'𝘦','f':'𝘧','g':'𝘨',
@@ -914,59 +700,60 @@ def italic_unicode(t):
     }
     return ''.join(m.get(c, c) for c in t)
 
-def smallcaps_unicode(t):
-    m = {
-        'a':'ᴀ','b':'ʙ','c':'ᴄ','d':'ᴅ','e':'ᴇ','f':'ғ','g':'ɢ',
-        'h':'ʜ','i':'ɪ','j':'ᴊ','k':'ᴋ','l':'ʟ','m':'ᴍ','n':'ɴ',
-        'o':'ᴏ','p':'ᴘ','q':'ǫ','r':'ʀ','s':'s','t':'ᴛ','u':'ᴜ',
-        'v':'ᴠ','w':'ᴡ','x':'x','y':'ʏ','z':'ᴢ'
-    }
-    return ''.join(m.get(c.lower(), c) for c in t)
-
 
 # ==========================================
-# 19. ENGLISH CAPTION GENERATOR
+# 13. CAPTION GENERATOR
 # ==========================================
-def generate_caption(hook, image_text):
-    fact   = random.choice(FACTS_EN)
-    tip    = random.choice(TIPS_EN)
-    review = random.choice(REVIEWS_EN)
-    body   = random.choice([fact, tip, review])
-
-    words  = ["Web Dev", "React JS", "Python", "API", "Tech", "Flutter", "Node JS"]
-    styled = random.choice([bold_unicode, italic_unicode, smallcaps_unicode])(
-        random.choice(words)
-    )
-
+def generate_caption(hook, image_text, topic):
     fixed    = random.sample(FIXED_HASHTAGS, 4)
     trending = fetch_trending_tags()
-    extra    = random.sample(TRENDING_TAGS, 3)
-    tags     = " ".join(fixed + trending + extra)
+    tags     = " ".join(fixed + trending)
+
+    ai_body, source = generate_caption_ai(hook, image_text, topic)
 
     d = "━" * 32
-    return (
-        f"{d}\n"
-        f"{hook}\n"
-        f"🔥 {image_text}\n"
-        f"{d}\n\n"
-        f"💡 {body}\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
-        f"💼 {bold_unicode('Service')}: {styled}\n"
-        f"📧 {italic_unicode('Email')}: rahulhaku52@gmail.com\n"
-        f"📱 {italic_unicode('Telegram')}: t.me/hacker_52\n"
-        f"🌐 {smallcaps_unicode('Follow Us')} for daily tips!\n"
-        f"━━━━━━━━━━━━━━━━\n\n"
-        f"{tags}"
-    )
+
+    if ai_body and source == 'ai':
+        caption = (
+            f"{d}\n"
+            f"{hook}\n"
+            f"🔥 {image_text}\n"
+            f"{d}\n\n"
+            f"{ai_body}\n\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"📧 {italic_unicode('Email')}: rahulhaku52@gmail.com\n"
+            f"📱 {italic_unicode('Telegram')}: t.me/hacker_52\n"
+            f"━━━━━━━━━━━━━━━━\n\n"
+            f"{tags}"
+        )
+        print("✅ Caption: AI generated")
+    else:
+        caption = (
+            f"{d}\n"
+            f"{hook}\n"
+            f"🔥 {image_text}\n"
+            f"{d}\n\n"
+            f"💡 Learn professional tech tips every day!\n"
+            f"🚀 Build your skills with us.\n\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"📧 {italic_unicode('Email')}: rahulhaku52@gmail.com\n"
+            f"📱 {italic_unicode('Telegram')}: t.me/hacker_52\n"
+            f"━━━━━━━━━━━━━━━━\n\n"
+            f"{tags}"
+        )
+        print("⚠️ Caption: Fallback used")
+
+    return caption
 
 
 # ==========================================
-# 20. FACEBOOK UPLOAD
+# 14. FACEBOOK UPLOAD
 # ==========================================
 def upload_to_facebook(video_path, title, description):
     if not PAGE_ID or not ACCESS_TOKEN:
         print("❌ Facebook credentials missing!")
         return {"error": "Missing credentials"}
+    
     try:
         with open(video_path, 'rb') as vf:
             resp = requests.post(
@@ -978,81 +765,114 @@ def upload_to_facebook(video_path, title, description):
                     'description': description[:2000],
                     'published': True
                 },
-                timeout=180
+                timeout=300
             )
+        
         result = resp.json()
+        
         if 'id' in result:
-            print(f"✅ Uploaded! ID: {result['id']}")
+            print(f"✅ Uploaded! Video ID: {result['id']}")
         else:
-            print(f"⚠️ Upload: {result}")
+            print(f"⚠️ Upload response: {result}")
+        
         return result
+    
     except Exception as e:
         print(f"❌ Upload error: {e}")
         return {"error": str(e)}
 
 
 # ==========================================
-# 21. MAIN
+# 15. MAIN
 # ==========================================
 def main():
-    print("=" * 55)
+    print("=" * 60)
     print(f"🚀 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"🔑 Pixabay : {'✅' if PIXABAY_API_KEY  else '❌'}")
-    print(f"🔑 Pexels  : {'✅' if PEXELS_API_KEY   else '❌'}")
-    print(f"🔑 Unsplash: {'✅' if UNSPLASH_API_KEY  else '❌'}")
-    print(f"🔑 Facebook: {'✅' if PAGE_ID and ACCESS_TOKEN else '❌'}")
-    print(f"🖼️  Logo    : {'✅' if os.path.exists(LOGO_PATH) else '⚠️'}")
-    print(f"⏱️  Duration: {MIN_DURATION}~{MAX_DURATION}s")
-    print("=" * 55)
+    print(f"🔑 Pexels   : {'✅' if PEXELS_API_KEY   else '❌'}")
+    print(f"🔑 Gemini   : {'✅' if GEMINI_API_KEY    else '❌'}")
+    print(f"🔑 Facebook : {'✅' if PAGE_ID and ACCESS_TOKEN else '❌'}")
+    print(f"🖼️  Logo     : {'✅' if os.path.exists(LOGO_PATH) else '⚠️'}")
+    print(f"⏱️  Duration : {MIN_DURATION}-{MAX_DURATION}s")
+    print("=" * 60)
 
-    img_path = voice_path = video_path = None
+    voice_path = video_path = bg_video_path = None
 
     try:
-        # ✅ 1. English hook + image text
-        hook       = random.choice(HOOKS)
-        image_text = random.choice(IMAGE_TEXTS)
+        # Step 1: Random topic
+        topic = random.choice(TECH_TOPICS)
+        print(f"\n📌 Topic: {topic}")
 
-        # ✅ 2. Voice text (Bengali/Hindi/English rotation)
-        voice_text, lang = pick_voice_text()
+        # Step 2: AI Hook
+        hook, hook_source = generate_hook_ai(topic)
+        print(f"🎣 Hook [{hook_source}]: {hook}")
 
-        print(f"🎣 Hook      : {hook}")
-        print(f"🖼️  Image text: {image_text}")
-        print(f"🎙️  Voice lang: {lang}")
-        print(f"📢 Voice text: {voice_text[:60]}...")
+        # Step 3: AI Image Text
+        image_text, img_text_source = generate_image_text_ai(topic)
+        print(f"🖼️  Text [{img_text_source}]: {image_text}")
 
-        # 3. Generate image (English text)
-        img_path = generate_image(image_text, hook)
+        # Step 4: AI Voice Script
+        voice_text, lang, voice_source = pick_voice_text(topic)
+        print(f"🎙️  Script [{voice_source}] ({lang}): {len(voice_text.split())} words")
+        print(f"   Preview: {voice_text[:100]}...")
 
-        # 4. Generate voice (Bengali/Hindi/English)
-        voice_path, voice_id = generate_voice(voice_text)
-        print(f"🎙️  Voice ID: {voice_id}")
+        # Step 5: Download Pexels Video
+        video_keyword = random.choice(VIDEO_SEARCH_KEYWORDS)
+        print(f"\n🎬 Searching Pexels video: '{video_keyword}'")
+        
+        bg_video_path = fetch_pexels_video(video_keyword)
+        
+        if not bg_video_path:
+            print("⚠️ Video download failed, trying another keyword...")
+            video_keyword = random.choice(VIDEO_SEARCH_KEYWORDS)
+            bg_video_path = fetch_pexels_video(video_keyword)
 
-        # 5. Create video (English subtitle)
-        video_path = create_video(img_path, voice_path, image_text)
+        if not bg_video_path:
+            print("❌ Could not download background video. Exiting.")
+            return
 
-        # 6. English caption
-        caption = generate_caption(hook, image_text)
-        print(f"\n📋 Caption:\n{caption[:300]}...\n")
+        # Step 6: Generate Voice
+        voice_path, voice_id = generate_voice(voice_text, lang)
+        print(f"🎙️  Voice generated: {voice_id}")
 
-        # 7. Upload
-        print("📤 Uploading...")
+        # Step 7: Create Video
+        theme = random.choice(COLOR_THEMES)
+        print(f"\n🎨 Theme: {theme['name']}")
+        
+        video_path = create_video(
+            bg_video_path,
+            voice_path,
+            image_text,
+            theme['accent']
+        )
+
+        if not video_path:
+            print("❌ Video creation failed. Exiting.")
+            return
+
+        # Step 8: AI Caption
+        caption = generate_caption(hook, image_text, topic)
+        print(f"\n📋 Caption preview:\n{caption[:250]}...\n")
+
+        # Step 9: Upload to Facebook
+        print("📤 Uploading to Facebook...")
         result = upload_to_facebook(
             video_path,
             f"{hook} — {image_text}",
             caption
         )
-        print(f"📊 Result: {result}")
+        print(f"📊 Upload result: {result}")
 
     except Exception as e:
-        print(f"❌ Fatal: {e}")
+        print(f"❌ Fatal error: {e}")
         import traceback
         traceback.print_exc()
 
     finally:
+        # Cleanup temp files
         for label, path in [
-            ("image", img_path),
             ("voice", voice_path),
-            ("video", video_path)
+            ("background video", bg_video_path),
+            ("final video", video_path)
         ]:
             if path and os.path.exists(path):
                 try:
@@ -1061,9 +881,9 @@ def main():
                 except Exception:
                     pass
 
-    print("=" * 55)
+    print("=" * 60)
     print(f"✅ Done: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 55)
+    print("=" * 60)
 
 
 if __name__ == "__main__":
