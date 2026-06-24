@@ -2,13 +2,13 @@ name: Auto Video Poster
 
 on:
   schedule:
-    - cron: '0 */5 * * *'  # প্রতি ৫ ঘণ্টায় একবার
+    - cron: '0 */5 * * *'  # Every 5 hours
   workflow_dispatch:  # Manual trigger
 
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 30  # Maximum 30 minutes
+    timeout-minutes: 30
 
     steps:
       - name: Checkout Repository
@@ -30,66 +30,58 @@ jobs:
             fonts-dejavu-core \
             fonts-noto-core \
             fonts-noto-cjk \
-            fonts-noto-color-emoji \
-            fonts-noto-extra
+            fonts-noto-color-emoji
           
-          # Verify FFmpeg installation
+          # Verify FFmpeg
           ffmpeg -version | head -n1
           
-          # ImageMagick policy fix (for moviepy)
-          sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml || true
+          # Fix ImageMagick policy for PDF/video processing
+          sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml 2>/dev/null || true
+          sudo sed -i 's/rights="none" pattern="VIDEO"/rights="read|write" pattern="VIDEO"/' /etc/ImageMagick-6/policy.xml 2>/dev/null || true
+
+      - name: Cache Python Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install Python Dependencies
         run: |
-          pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
           
-          # Install from requirements.txt
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
-          
-          # Ensure critical packages
-          pip install \
-            moviepy==1.0.3 \
-            imageio==2.34.0 \
-            imageio-ffmpeg==0.4.9 \
-            Pillow==10.2.0 \
-            requests==2.31.0 \
-            edge-tts==6.1.10 \
-            gtts==2.5.0
-          
-          # Show installed packages
+          # Verify critical packages
           echo "📦 Installed packages:"
-          pip list | grep -E "moviepy|imageio|Pillow|edge-tts|requests"
+          pip list | grep -E "moviepy|imageio|Pillow|edge-tts|requests|numpy"
 
-      - name: Verify MoviePy Installation
+      - name: Verify MoviePy
         run: |
           python -c "
           import sys
           try:
               import moviepy.editor as mp
-              print('✅ moviepy.editor imported successfully')
+              from moviepy.config import get_setting
+              print('✅ moviepy.editor OK')
               print(f'MoviePy version: {mp.__version__}')
+              print(f'FFmpeg: {get_setting(\"FFMPEG_BINARY\")}')
           except Exception as e:
-              print(f'❌ MoviePy import failed: {e}')
+              print(f'❌ Error: {e}')
               sys.exit(1)
           "
 
-      - name: Verify FFmpeg Integration
+      - name: Verify Edge-TTS
         run: |
           python -c "
-          from moviepy.config import get_setting
-          ffmpeg_bin = get_setting('FFMPEG_BINARY')
-          print(f'FFmpeg binary: {ffmpeg_bin}')
-          import subprocess
-          subprocess.run([ffmpeg_bin, '-version'], check=True, capture_output=True)
-          print('✅ FFmpeg integration verified')
+          import edge_tts
+          print('✅ edge-tts OK')
+          print(f'Version: {edge_tts.__version__}')
           "
 
-      - name: Check Font Availability
+      - name: Check Fonts
         run: |
-          echo "🔍 Checking available fonts..."
-          fc-list | grep -i "liberation\|dejavu\|noto" | head -n 10 || echo "⚠️ No matching fonts found"
+          fc-list | grep -i "liberation\|dejavu\|noto" | head -5
 
       - name: Run Video Poster Bot
         env:
@@ -100,42 +92,42 @@ jobs:
           UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          echo "🚀 Starting Video Poster Bot..."
+          echo "🚀 Starting bot..."
           python bot.py
-        continue-on-error: false
 
-      - name: Upload Logs on Failure
+      - name: Upload Artifacts on Failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: error-logs
+          name: debug-logs-${{ github.run_number }}
           path: |
             *.log
-            /tmp/*.mp4
-            /tmp/*.mp3
-            /tmp/*.png
+            /tmp/tmp*.mp4
+            /tmp/tmp*.mp3
+            /tmp/tmp*.png
           retention-days: 2
 
-      - name: Cleanup Temp Files
+      - name: Cleanup
         if: always()
         run: |
-          echo "🧹 Cleaning up temporary files..."
           rm -f /tmp/tmp*.mp4 /tmp/tmp*.mp3 /tmp/tmp*.png /tmp/tmp*.jpg
-          echo "✅ Cleanup complete"
+          echo "✅ Cleanup done"
 
       - name: Job Summary
         if: always()
         run: |
-          echo "## 📊 Job Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Workflow Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Duration**: $(date -u -d @$(($(date +%s) - $GITHUB_RUN_STARTED_AT)) +%M:%S)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Python**: 3.11" >> $GITHUB_STEP_SUMMARY
-          echo "- **MoviePy**: 1.0.3" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python | 3.11 |" >> $GITHUB_STEP_SUMMARY
+          echo "| MoviePy | 1.0.3 |" >> $GITHUB_STEP_SUMMARY
+          echo "| FFmpeg | $(ffmpeg -version 2>&1 | head -n1 | cut -d' ' -f3) |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ job.status }}" == "success" ]; then
-            echo "✅ **Video posted successfully!**" >> $GITHUB_STEP_SUMMARY
+            echo "### ✅ Video posted successfully!" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ **Job failed. Check logs above.**" >> $GITHUB_STEP_SUMMARY
+            echo "### ❌ Job failed - check logs" >> $GITHUB_STEP_SUMMARY
           fi
