@@ -2,8 +2,8 @@ name: Auto Video Poster
 
 on:
   schedule:
-    - cron: '0 */5 * * *'  # Every 5 hours
-  workflow_dispatch:  # Manual trigger
+    - cron: '0 */5 * * *'
+  workflow_dispatch:
 
 jobs:
   post:
@@ -17,7 +17,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10'
           cache: 'pip'
 
       - name: Install System Dependencies
@@ -32,29 +32,17 @@ jobs:
             fonts-noto-cjk \
             fonts-noto-color-emoji
           
-          # Verify FFmpeg
           ffmpeg -version | head -n1
           
-          # Fix ImageMagick policy for PDF/video processing
           sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml 2>/dev/null || true
-          sudo sed -i 's/rights="none" pattern="VIDEO"/rights="read|write" pattern="VIDEO"/' /etc/ImageMagick-6/policy.xml 2>/dev/null || true
-
-      - name: Cache Python Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
 
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
+          pip install setuptools==69.1.0
           pip install -r requirements.txt
-          
-          # Verify critical packages
           echo "📦 Installed packages:"
-          pip list | grep -E "moviepy|imageio|Pillow|edge-tts|requests|numpy"
+          pip list | grep -E "setuptools|moviepy|imageio|Pillow|edge-tts|requests|numpy"
 
       - name: Verify MoviePy
         run: |
@@ -62,26 +50,20 @@ jobs:
           import sys
           try:
               import moviepy.editor as mp
-              from moviepy.config import get_setting
               print('✅ moviepy.editor OK')
               print(f'MoviePy version: {mp.__version__}')
+              from moviepy.config import get_setting
               print(f'FFmpeg: {get_setting(\"FFMPEG_BINARY\")}')
           except Exception as e:
               print(f'❌ Error: {e}')
+              import traceback
+              traceback.print_exc()
               sys.exit(1)
           "
 
       - name: Verify Edge-TTS
         run: |
-          python -c "
-          import edge_tts
-          print('✅ edge-tts OK')
-          print(f'Version: {edge_tts.__version__}')
-          "
-
-      - name: Check Fonts
-        run: |
-          fc-list | grep -i "liberation\|dejavu\|noto" | head -5
+          python -c "import edge_tts; print('✅ edge-tts OK')"
 
       - name: Run Video Poster Bot
         env:
@@ -121,13 +103,11 @@ jobs:
           echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Python | 3.11 |" >> $GITHUB_STEP_SUMMARY
-          echo "| MoviePy | 1.0.3 |" >> $GITHUB_STEP_SUMMARY
-          echo "| FFmpeg | $(ffmpeg -version 2>&1 | head -n1 | cut -d' ' -f3) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python | 3.10 |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ job.status }}" == "success" ]; then
             echo "### ✅ Video posted successfully!" >> $GITHUB_STEP_SUMMARY
           else
-            echo "### ❌ Job failed - check logs" >> $GITHUB_STEP_SUMMARY
+            echo "### ❌ Job failed - check logs above" >> $GITHUB_STEP_SUMMARY
           fi
