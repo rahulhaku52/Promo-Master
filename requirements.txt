@@ -3,6 +3,8 @@ Pillow
 gTTS
 edge-tts
 moviepy==1.0.3
-imageio==2.28.1
+imageio==2.34.0
 imageio-ffmpeg==0.4.9
-numpy
+numpy<2.0.0
+decorator
+tqdm
