@@ -360,7 +360,7 @@ Rules:
 # ==========================================
 # 6. PIL TEXT OVERLAY
 # ==========================================
-def create_text_overlay(text, img_width=1200, accent_color=(0, 200, 255)):
+def create_text_overlay(text, img_width=854, accent_color=(0, 200, 255)):
     font_paths = [
         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -369,15 +369,15 @@ def create_text_overlay(text, img_width=1200, accent_color=(0, 200, 255)):
     font_path = next((p for p in font_paths if os.path.exists(p)), None)
 
     try:
-        font       = ImageFont.truetype(font_path, 38) if font_path else ImageFont.load_default()
-        font_small = ImageFont.truetype(font_path, 24) if font_path else ImageFont.load_default()
+        font       = ImageFont.truetype(font_path, 32) if font_path else ImageFont.load_default()
+        font_small = ImageFont.truetype(font_path, 20) if font_path else ImageFont.load_default()
     except Exception:
         font = font_small = ImageFont.load_default()
 
     words, lines, current = text.split(), [], ""
     for word in words:
         test = f"{current} {word}".strip()
-        if len(test) * 23 <= img_width - 80:
+        if len(test) * 20 <= img_width - 60:
             current = test
         else:
             if current:
@@ -387,9 +387,9 @@ def create_text_overlay(text, img_width=1200, accent_color=(0, 200, 255)):
         lines.append(current)
     lines = lines[:3]
 
-    line_h = 55
-    pad    = 18
-    box_h  = len(lines) * line_h + pad * 2 + 42
+    line_h = 45
+    pad    = 15
+    box_h  = len(lines) * line_h + pad * 2 + 38
 
     overlay = Image.new('RGBA', (img_width, box_h), (0, 0, 0, 0))
     draw    = ImageDraw.Draw(overlay)
@@ -398,18 +398,18 @@ def create_text_overlay(text, img_width=1200, accent_color=(0, 200, 255)):
         alpha = int(160 + 60 * (y / box_h))
         draw.line([(0, y), (img_width, y)], fill=(0, 0, 0, alpha))
 
-    draw.rectangle([(0, 0), (img_width, 4)], fill=(*accent_color, 230))
+    draw.rectangle([(0, 0), (img_width, 3)], fill=(*accent_color, 230))
 
     y_pos = pad
     for i, line in enumerate(lines):
-        draw.text((52, y_pos + 2), line, font=font, fill=(0, 0, 0, 210))
+        draw.text((42, y_pos + 2), line, font=font, fill=(0, 0, 0, 210))
         color = (*accent_color, 255) if i == 0 else (255, 255, 255, 255)
-        draw.text((50, y_pos), line, font=font, fill=color)
+        draw.text((40, y_pos), line, font=font, fill=color)
         y_pos += line_h
 
     contact = "📧 rahulhaku52@gmail.com  |  📱 t.me/hacker_52"
-    draw.rectangle([(0, box_h - 38), (img_width, box_h)], fill=(0, 0, 0, 230))
-    draw.text((50, box_h - 30), contact, font=font_small, fill=(200, 200, 200, 255))
+    draw.rectangle([(0, box_h - 33), (img_width, box_h)], fill=(0, 0, 0, 230))
+    draw.text((40, box_h - 26), contact, font=font_small, fill=(200, 200, 200, 255))
 
     tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
     overlay.save(tmp.name)
@@ -477,11 +477,11 @@ def pick_voice_text(topic):
 
 
 # ==========================================
-# 8. PEXELS VIDEO DOWNLOADER
+# 8. ✅ UPDATED PEXELS VIDEO DOWNLOADER
 # ==========================================
 def fetch_pexels_video(query):
     """
-    Pexels Video API থেকে real stock video download করে
+    ✅ Downloads SD quality video (5-10MB) from Pexels
     """
     if not PEXELS_API_KEY:
         print("⚠️ PEXELS_API_KEY not set")
@@ -507,20 +507,25 @@ def fetch_pexels_video(query):
             print(f"⚠️ No videos found for '{query}'")
             return None
 
-        # Random select from top 5
         selected = random.choice(videos[:5])
-
-        # Get best quality video file
         video_files = selected.get("video_files", [])
-        
+
+        # ✅ Prefer SD quality (800-1000px width) for smaller file size
         best_video = None
         for vf in video_files:
-            # Prefer HD quality (1280x720 or higher)
-            if vf.get("width", 0) >= 1280:
+            width = vf.get("width", 0)
+            if 800 <= width <= 1000:
                 best_video = vf
                 break
         
-        # Fallback to any quality
+        # Fallback: any medium quality
+        if not best_video:
+            for vf in video_files:
+                if vf.get("width", 0) >= 854:
+                    best_video = vf
+                    break
+
+        # Last resort: first available
         if not best_video and video_files:
             best_video = video_files[0]
 
@@ -530,22 +535,21 @@ def fetch_pexels_video(query):
 
         video_url = best_video.get("link")
         
-        print(f"⬇️ Downloading Pexels video: {video_url[:50]}...")
+        print(f"⬇️ Downloading Pexels video ({best_video.get('width')}x{best_video.get('height')})...")
 
-        # Download video
         vr = requests.get(video_url, timeout=90)
 
         if vr.status_code != 200:
             print(f"⚠️ Video download failed: {vr.status_code}")
             return None
 
-        # Save to temp file
         temp_video = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
         
         with open(temp_video.name, "wb") as f:
             f.write(vr.content)
 
-        print(f"✅ Pexels video downloaded: {os.path.getsize(temp_video.name) / 1024 / 1024:.1f}MB")
+        file_size_mb = os.path.getsize(temp_video.name) / (1024 * 1024)
+        print(f"✅ Pexels video downloaded: {file_size_mb:.1f}MB")
         
         return temp_video.name
 
@@ -555,47 +559,40 @@ def fetch_pexels_video(query):
 
 
 # ==========================================
-# 9. VIDEO CREATOR (Real Video Background)
+# 9. ✅ UPDATED VIDEO CREATOR
 # ==========================================
 def create_video(background_video_path, voice_path, subtitle_text, theme_accent=(0, 200, 255)):
     """
-    Real stock video + voice + subtitle → final video
+    ✅ Creates compressed video (5-8MB) optimized for Facebook
     """
     output_path = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False).name
     overlay_path = None
 
     try:
-        # Load audio
         audio_clip = AudioFileClip(voice_path)
         audio_dur = audio_clip.duration
         print(f"🎙️ Audio duration: {audio_dur:.1f}s")
 
-        # Target video duration (15-20s)
         video_dur = max(audio_dur, MIN_DURATION)
         video_dur = min(video_dur, MAX_DURATION)
         print(f"🎬 Target video duration: {video_dur:.1f}s")
 
-        # Load background video
         bg_video = VideoFileClip(background_video_path)
         print(f"📹 Background video: {bg_video.duration:.1f}s")
 
-        # Trim or loop background video to match audio
         if bg_video.duration > video_dur:
-            # Video longer than needed — random start point
             max_start = max(0, bg_video.duration - video_dur)
             start_time = random.uniform(0, max_start)
             bg_video = bg_video.subclip(start_time, start_time + video_dur)
             print(f"✂️ Video trimmed: {start_time:.1f}s to {start_time + video_dur:.1f}s")
         else:
-            # Video shorter — loop it
             bg_video = bg_video.loop(duration=video_dur)
             print(f"🔁 Video looped to {video_dur:.1f}s")
 
-        # Resize to standard size
-        bg_video = bg_video.resize((1200, 628))
+        # ✅ Lower resolution = smaller file (854x480 is FB-friendly)
+        bg_video = bg_video.resize((854, 480))
 
-        # Create subtitle overlay
-        overlay_path = create_text_overlay(subtitle_text, 1200, theme_accent)
+        overlay_path = create_text_overlay(subtitle_text, 854, theme_accent)
         
         subtitle_clip = (
             ImageClip(overlay_path)
@@ -604,32 +601,32 @@ def create_video(background_video_path, voice_path, subtitle_text, theme_accent=
             .set_opacity(0.92)
         )
 
-        # Logo
         logo_clip = _get_logo_clip(video_dur)
 
-        # Composite all clips
         clips = [bg_video, subtitle_clip]
         if logo_clip:
             clips.append(logo_clip)
 
-        final = CompositeVideoClip(clips, size=(1200, 628))
-
-        # Add audio
+        final = CompositeVideoClip(clips, size=(854, 480))
         final = final.set_audio(audio_clip)
 
-        # Export
+        # ✅ Lower bitrate = smaller file
         final.write_videofile(
             output_path,
             codec="libx264",
             audio_codec="aac",
-            fps=30,
+            fps=24,              # Lower FPS
             preset="fast",
+            bitrate="800k",      # Video bitrate 800kbps
+            audio_bitrate="96k", # Audio bitrate 96kbps
             verbose=False,
             logger=None,
             threads=4
         )
 
-        print(f"✅ Real video created: {output_path}")
+        file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
+        print(f"✅ Video created: {file_size_mb:.1f}MB")
+        
         return output_path
 
     except Exception as e:
@@ -655,7 +652,7 @@ def _get_logo_clip(video_dur):
         try:
             return (
                 ImageClip(LOGO_PATH)
-                .resize(height=70)
+                .resize(height=60)
                 .set_position(('right', 'bottom'))
                 .set_duration(5)
                 .set_start(start_t)
@@ -670,7 +667,6 @@ def _get_logo_clip(video_dur):
 # 11. TRENDING HASHTAGS
 # ==========================================
 def fetch_trending_tags():
-    # Simple fallback
     return random.sample(TRENDING_TAGS, 3)
 
 
@@ -754,15 +750,18 @@ def upload_to_facebook(video_path, title, description):
         print("❌ Facebook credentials missing!")
         return {"error": "Missing credentials"}
     
+    file_size_mb = os.path.getsize(video_path) / (1024 * 1024)
+    print(f"📦 Final video size: {file_size_mb:.1f}MB")
+    
     try:
         with open(video_path, 'rb') as vf:
             resp = requests.post(
-                f"https://graph.facebook.com/{PAGE_ID}/videos",
+                f"https://graph-video.facebook.com/v18.0/{PAGE_ID}/videos",
                 files={'source': vf},
                 data={
                     'access_token': ACCESS_TOKEN,
-                    'title': title[:100],
-                    'description': description[:2000],
+                    'title': title[:80],
+                    'description': description[:800],
                     'published': True
                 },
                 timeout=300
@@ -771,7 +770,9 @@ def upload_to_facebook(video_path, title, description):
         result = resp.json()
         
         if 'id' in result:
-            print(f"✅ Uploaded! Video ID: {result['id']}")
+            video_id = result['id']
+            print(f"✅ Uploaded! Video ID: {video_id}")
+            print(f"🔗 URL: https://www.facebook.com/{video_id}")
         else:
             print(f"⚠️ Upload response: {result}")
         
@@ -798,24 +799,19 @@ def main():
     voice_path = video_path = bg_video_path = None
 
     try:
-        # Step 1: Random topic
         topic = random.choice(TECH_TOPICS)
         print(f"\n📌 Topic: {topic}")
 
-        # Step 2: AI Hook
         hook, hook_source = generate_hook_ai(topic)
         print(f"🎣 Hook [{hook_source}]: {hook}")
 
-        # Step 3: AI Image Text
         image_text, img_text_source = generate_image_text_ai(topic)
         print(f"🖼️  Text [{img_text_source}]: {image_text}")
 
-        # Step 4: AI Voice Script
         voice_text, lang, voice_source = pick_voice_text(topic)
         print(f"🎙️  Script [{voice_source}] ({lang}): {len(voice_text.split())} words")
         print(f"   Preview: {voice_text[:100]}...")
 
-        # Step 5: Download Pexels Video
         video_keyword = random.choice(VIDEO_SEARCH_KEYWORDS)
         print(f"\n🎬 Searching Pexels video: '{video_keyword}'")
         
@@ -830,11 +826,9 @@ def main():
             print("❌ Could not download background video. Exiting.")
             return
 
-        # Step 6: Generate Voice
         voice_path, voice_id = generate_voice(voice_text, lang)
         print(f"🎙️  Voice generated: {voice_id}")
 
-        # Step 7: Create Video
         theme = random.choice(COLOR_THEMES)
         print(f"\n🎨 Theme: {theme['name']}")
         
@@ -849,11 +843,9 @@ def main():
             print("❌ Video creation failed. Exiting.")
             return
 
-        # Step 8: AI Caption
         caption = generate_caption(hook, image_text, topic)
         print(f"\n📋 Caption preview:\n{caption[:250]}...\n")
 
-        # Step 9: Upload to Facebook
         print("📤 Uploading to Facebook...")
         result = upload_to_facebook(
             video_path,
@@ -868,7 +860,6 @@ def main():
         traceback.print_exc()
 
     finally:
-        # Cleanup temp files
         for label, path in [
             ("voice", voice_path),
             ("background video", bg_video_path),
